@@ -282,6 +282,29 @@ class DrawableAction : Action {
 
 由于部分系统版本启动支持手势的无障碍服务会造成系统卡顿(掉帧)，所以本库分为两个服务来设计。
 
+### 引入 Android-Accessibility-Api
+
+1. Add it in your root build.gradle at the end of repositories:
+
+```groovy
+allprojects {
+	repositories {
+		...
+		maven { url 'https://jitpack.io' }
+	}
+}
+```
+
+2. Add the dependency
+
+```groovy
+dependencies {
+	implementation 'com.gitee.Vove:Android-Accessibility-Api:Tag'
+}
+```
+
+the TAG is [![](https://jitpack.io/v/com.gitee.Vove/Android-Accessibility-Api.svg)](https://jitpack.io/#com.gitee.Vove/Android-Accessibility-Api)
+
 ### 创建你的服务
 
 #### 基础服务
