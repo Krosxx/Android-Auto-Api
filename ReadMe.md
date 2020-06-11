@@ -64,7 +64,7 @@ delay(100)
 
 ## 视图检索
 
-#### 提取文字
+### 提取文字
 
 <img width=300 src="screenshots/action_pick_text.gif"></img>
 
@@ -82,7 +82,7 @@ withContext(Dispatchers.Main) {
 }
 ```
 
-#### 视图搜索
+### 视图搜索
 
 1. 提供一个基础类 `ViewFinder`， 并封装一个 `ViewFinderWithMultiCondition` 来指定搜索条件，实现快速搜索
 
@@ -185,7 +185,7 @@ withContext(Dispatchers.Main) {
 
 全局手势可以点击/长按任意坐标，执行路径手势。
 
-#### 示例
+### 示例
 
 <img width=300 src="screenshots/action_gesture.gif"></img>
 
@@ -255,7 +255,7 @@ class DrawableAction : Action {
 
 </details>
 
-#### Api文档
+### Api文档
 
 **手势Api全部需要Android N+**
 
@@ -282,9 +282,9 @@ class DrawableAction : Action {
 
 由于部分系统版本启动支持手势的无障碍服务会造成系统卡顿(掉帧)，所以本库分为两个服务来设计。
 
-#### 创建你的服务
+### 创建你的服务
 
-##### 基础服务
+#### 基础服务
 
 用来支持 布局检索，视图操作
 
@@ -361,7 +361,7 @@ class BaseAccessibilityService : AccessibilityApi() {
 
 </details>
 
-##### 手势服务
+#### 手势服务
 
 > 用于执行手势，Android N+可用
 
@@ -430,7 +430,7 @@ class GestureAccessibilityService : AccessibilityService() {
 
 </details>
 
-#### 额外配置 
+### 额外配置 
 
 在 Application 中初始化：
 
@@ -448,7 +448,7 @@ override fun onCreate() {
 
 
 
-#### 合并服务
+### 合并服务
 
 如果你想使用一个服务来完成，可使用如下配置
 
