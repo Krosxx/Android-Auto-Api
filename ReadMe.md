@@ -453,10 +453,10 @@ override fun onCreate() {
 如果你想使用一个服务来完成，可使用如下配置
 
 
-<details>
-<summary>展开查看 BaseAccessibilityService </summary>
-
 1. 创建服务
+
+<details>
+<summary>展开查看 MyAccessibilityService </summary>
 
 ```kotlin
 class MyAccessibilityService : AccessibilityApi() {
