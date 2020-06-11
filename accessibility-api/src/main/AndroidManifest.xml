@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="cn.vove7.andro_accessibility_api">
+
+    <application>
+        <provider
+            android:name=".InitCp"
+            android:authorities="${applicationId}.init"
+            android:exported="false" />
+    </application>
+</manifest>

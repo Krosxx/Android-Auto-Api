@@ -1,0 +1,3 @@
+include ':accessibility-api'
+include ':app'
+rootProject.name = "Android-Accessibility-Api"
