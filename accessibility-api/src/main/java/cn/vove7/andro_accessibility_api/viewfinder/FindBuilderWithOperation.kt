@@ -4,7 +4,6 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.os.Build
 import android.view.accessibility.AccessibilityNodeInfo
-import android.view.accessibility.AccessibilityWindowInfo
 import androidx.annotation.RequiresApi
 import cn.vove7.andro_accessibility_api.utils.ViewNodeNotFoundException
 import cn.vove7.andro_accessibility_api.utils.whileWaitTime
@@ -39,14 +38,14 @@ abstract class FindBuilderWithOperation : ViewOperation {
 
     /**
      *
-     * @param m 时限
+     * @param waitMillis 时限
      * @return ViewNode which is returned until show in screen
      */
-    fun waitFor(m: Long): ViewNode? = finder.waitFor(m)
+    fun waitFor(waitMillis: Long): ViewNode? = finder.waitFor(waitMillis)
 
     @Throws(ViewNodeNotFoundException::class)
-    fun require(l: Long = WAIT_MILLIS): ViewNode {
-        return waitFor(l) ?: throw ViewNodeNotFoundException(finder)
+    fun require(waitMillis: Long = WAIT_MILLIS): ViewNode {
+        return waitFor(waitMillis) ?: throw ViewNodeNotFoundException(finder)
     }
 
     /**

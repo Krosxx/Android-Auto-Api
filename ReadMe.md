@@ -92,7 +92,8 @@ withContext(Dispatchers.Main) {
 | :----------------------------------------------------------: | :----------------------------------------------------------: |
 |   findFirst(includeInvisible: Boolean = false): ViewNode?    | 立即搜索，返回满足条件的第一个结果<br>includeInvisible: 是否包含不可见元素 |
 | findAll(includeInvisible: Boolean = false): Array\<ViewNode> |               立即搜索，返回满足条件的所有结果               |
-|             waitFor(m: Long = 30000): ViewNode?              |   等待搜索，在指定时间内循环搜索（视图更新），超时返回null   |
+|         waitFor(waitMillis: Long = 30000): ViewNode?         |   等待搜索，在指定时间内循环搜索（视图更新），超时返回null   |
+|      require(waitMillis: Long = WAIT_MILLIS): ViewNode       |                       等待超时抛出异常                       |
 
 **示例1：** 等待 Chrome 打开 > 展开菜单
 
