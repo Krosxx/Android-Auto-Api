@@ -4,9 +4,14 @@
 
 > 安卓无障碍服务Api, 为了简化无障碍服务使用，并使用 Kotlin 以提供简洁的Api。
 
+[TOC]
+
+
+
 ## 基础导航
 
 (图片加载过慢可到 [Gitee](https://www.gitee.com/Vove/Android-Accessibility-Api) 查看)
+
 <img width=300 src="screenshots/action_nav.gif"></img>
 
 
@@ -47,7 +52,7 @@ delay(100)
 
 </details>
 
-更多操作**
+更多操作:
 
 | 方法          | 说明                        |
 | ------------- | --------------------------- |
@@ -145,6 +150,7 @@ editor().require().apply { // this is ViewNode
 }
 ```
 </details>
+
 
 2. 提供自定义搜索条件 `CustomViewFinder`
 
@@ -253,6 +259,9 @@ class DrawableAction : Action {
 
 **手势Api全部需要Android N+**
 
+<details>
+<summary>展开查看</summary>
+
 | 方法                                                         | 说明                        |
 | :----------------------------------------------------------- | :-------------------------- |
 | fun setScreenSize(width: Int, height: Int)                   | 设置屏幕相对坐标            |
@@ -265,6 +274,10 @@ class DrawableAction : Action {
 | fun scrollUp(): Boolean                                      | 向上滑动                    |
 | fun scrollDown(): Boolean                                    | 向下滑动                    |
 
+</details>
+
+
+
 ## 使用
 
 由于部分系统版本启动支持手势的无障碍服务会造成系统卡顿(掉帧)，所以本库分为两个服务来设计。
@@ -274,6 +287,8 @@ class DrawableAction : Action {
 ##### 基础服务
 
 用来支持 布局检索，视图操作
+
+1. 定义你的 BaseAccessibilityService
 
 <details>
 <summary>展开查看 BaseAccessibilityService </summary>
@@ -305,7 +320,7 @@ class BaseAccessibilityService : AccessibilityApi() {
 
 </details>
 
-服务注册
+2. 服务注册
 
 ```xml
 <service
@@ -322,7 +337,7 @@ class BaseAccessibilityService : AccessibilityApi() {
 </service>
 ```
 
-
+3. base_accessibility_config.xml
 
 <details>
 <summary>点击展开 res/xml/base_accessibility_config.xml</summary>
@@ -350,6 +365,8 @@ class BaseAccessibilityService : AccessibilityApi() {
 
 > 用于执行手势，Android N+可用
 
+1. 定义 GestureAccessibilityService
+
 <details>
 <summary>展开查看 GestureAccessibilityService </summary>
 
@@ -372,7 +389,7 @@ class GestureAccessibilityService : AccessibilityService() {
 
 </details>
 
-服务注册
+2. 服务注册
 
 ```xml
 <service
@@ -388,6 +405,8 @@ class GestureAccessibilityService : AccessibilityService() {
         android:resource="@xml/gesture_accessibility_config" />
 </service>
 ```
+
+3. gesture_accessibility_config.xml
 
 <details>
 <summary>点击展开 res/xml/gesture_accessibility_config.xml</summary>
@@ -411,7 +430,7 @@ class GestureAccessibilityService : AccessibilityService() {
 
 </details>
 
-#### 配置 
+#### 额外配置 
 
 在 Application 中初始化：
 
@@ -506,6 +525,15 @@ class MyAccessibilityService : AccessibilityApi() {
 ```
 
 </details>
+
+4. Application 初始化配置 
+
+```kotlin
+AccessibilityApi.apply {
+    BASE_SERVICE_CLS = MyAccessibilityService::class.java
+    GESTURE_SERVICE_CLS = MyAccessibilityService::class.java
+}
+```
 
 ----------------------------
 
