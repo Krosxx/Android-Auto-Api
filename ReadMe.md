@@ -455,9 +455,6 @@ override fun onCreate() {
 
 1. 创建服务
 
-<details>
-<summary>展开查看 MyAccessibilityService </summary>
-
 ```kotlin
 class MyAccessibilityService : AccessibilityApi() {
     //启用 页面更新 回调
@@ -481,7 +478,6 @@ class MyAccessibilityService : AccessibilityApi() {
 }
 ```
 
-</details>
 
 2. 清单注册
 
