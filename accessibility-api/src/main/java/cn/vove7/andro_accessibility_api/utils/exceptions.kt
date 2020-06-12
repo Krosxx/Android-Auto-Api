@@ -1,5 +1,6 @@
 package cn.vove7.andro_accessibility_api.utils
 
+import cn.vove7.andro_accessibility_api.AccessibilityApi
 import cn.vove7.andro_accessibility_api.viewfinder.ViewFinder
 
 /**
@@ -12,13 +13,18 @@ import cn.vove7.andro_accessibility_api.viewfinder.ViewFinder
 /**
  * 视图搜索失败异常
  */
-class ViewNodeNotFoundException(finder: ViewFinder?) : Exception(
-    finder?.toString()
-        ?: "no finder"
+class ViewNodeNotFoundException(finder: ViewFinder) : Exception(
+    "ViewNodeNotFound: $finder"
 )
 
 /**
  * 无障碍服务未运行异常
  * @constructor
  */
-class NeedAccessibilityException(name: String?) : RuntimeException("无障碍服务未运行: $name")
+open class NeedAccessibilityException(name: String?) : RuntimeException("无障碍服务未运行: $name")
+
+class NeedBaseAccessibilityException :
+    NeedAccessibilityException(AccessibilityApi.BASE_SERVICE_CLS.name)
+
+class NeedGestureAccessibilityException :
+    NeedAccessibilityException(AccessibilityApi.GESTURE_SERVICE_CLS.name)

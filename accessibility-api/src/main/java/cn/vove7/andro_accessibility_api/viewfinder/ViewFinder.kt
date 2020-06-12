@@ -3,6 +3,7 @@ package cn.vove7.andro_accessibility_api.viewfinder
 import android.view.accessibility.AccessibilityNodeInfo
 import cn.vove7.andro_accessibility_api.AccessibilityApi
 import cn.vove7.andro_accessibility_api.utils.NeedAccessibilityException
+import cn.vove7.andro_accessibility_api.utils.NeedBaseAccessibilityException
 import cn.vove7.andro_accessibility_api.viewnode.ViewNode
 
 /**
@@ -21,7 +22,7 @@ abstract class ViewFinder(val node: ViewNode?) {
     val startNode: ViewNode
         get() = node ?: {
             val service = AccessibilityApi.baseService
-                ?: throw NeedAccessibilityException(AccessibilityApi.BASE_SERVICE_CLS.name)
+                ?: throw NeedBaseAccessibilityException()
             service.rootNodeOfAllWindows
         }()
 
@@ -32,7 +33,7 @@ abstract class ViewFinder(val node: ViewNode?) {
      * @param m Long 时限
      */
     fun waitFor(m: Long = 30000, includeInvisible: Boolean = false): ViewNode? {
-        if (!AccessibilityApi.isBaseServiceEnable) return null
+        if (!AccessibilityApi.isBaseServiceEnable) throw NeedBaseAccessibilityException()
         val t = when {
             m in 0..30000 -> m
             m < 0 -> 0

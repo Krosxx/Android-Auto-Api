@@ -16,6 +16,7 @@ import cn.vove7.andro_accessibility_api.demo.MainActivity
 import cn.vove7.andro_accessibility_api.demo.toast
 import cn.vove7.andro_accessibility_api.ext.ScreenTextFinder
 import cn.vove7.andro_accessibility_api.utils.AdapterRectF
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -184,7 +185,7 @@ class TextMatchAction : Action {
         requireBaseAccessibility()
         val s = buildString {
             appendln("containsText(\"基础\").find()")
-            appendln( containsText("基础").find().map { it.text } )
+            appendln(containsText("基础").find().map { it.text })
             appendln()
             appendln("matchesText(\"[a-zA-Z]+\").find()")
             appendln(matchesText("[a-zA-Z]+").find().map { it.text })
@@ -228,3 +229,31 @@ class SelectTextAction : Action {
     }
 }
 
+class ClickTextAction : Action {
+
+    override val name: String
+        get() = "点击文本"
+
+    override suspend fun run(act: Activity) {
+        requireBaseAccessibility()
+        var targetText = act.edit_text.text.toString().trim()
+        if (targetText == "123456") {
+            targetText = "文本匹配"
+            withContext(Dispatchers.Main) {
+                act.edit_text.setText("文本匹配")
+            }
+        }
+        if (targetText.isEmpty()) {
+            toast("请输入文本")
+            withContext(Dispatchers.Main) {
+                act.edit_text.requestFocus()
+            }
+            return
+        }
+        val node = containsText(targetText).type("textview")
+        val t = node.findFirst()
+        toast("haveFound: $t")
+        delay(1000)
+        t?.tryClick()
+    }
+}
