@@ -86,6 +86,8 @@ withContext(Dispatchers.Main) {
 
 1. 提供一个基础类 `ViewFinder`， 并封装一个 `ViewFinderWithMultiCondition` 来指定搜索条件，实现快速搜索
 
+查看所有方法：[view_finder_api.kt](accessibility-api/src/main/java/cn/vove7/andro_accessibility_api/api/view_finder_api.kt)
+
 `ViewFinder` 主要方法：
 
 |                             方法                             |                             说明                             |
