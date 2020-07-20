@@ -258,7 +258,7 @@ class DrawableAction : Action {
 
 ### Api文档
 
-**手势Api全部需要Android N+**
+**手势Api全部需要Android N+；代码必须执行于非主线程**
 
 <details>
 <summary>展开查看</summary>
@@ -270,6 +270,7 @@ class DrawableAction : Action {
 | fun gesture(<br>     duration: Long,<br>     path: Path,<br>     onCancel: Function0<Unit>? = null <br>): Boolean | 根据Path执行手势            |
 | fun gestureAsync(<br>     duration: Long,<br>     points: Array<Pair<Int, Int>> <br>) | 异步执行手势                |
 | fun gestures(<br>     duration: Long,<br>     ppss: Array<Array<Pair<Int, Int>>>,<br>     onCancel: Function0<Unit>? = null <br>): Boolean | 多路径手势                  |
+| fun click(x: Int, y: Int)                                | 点击； x,y 相对坐标         |
 | fun longClick(x: Int, y: Int)                                | 长按； x,y 相对坐标         |
 | fun swipe(x1: Int, y1: Int, x2: Int, y2: Int, dur: Int)      | 两点间滑动                  |
 | fun scrollUp(): Boolean                                      | 向上滑动                    |
