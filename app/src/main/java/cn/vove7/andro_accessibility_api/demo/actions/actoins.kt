@@ -257,3 +257,18 @@ class ClickTextAction : Action {
         t?.tryClick()
     }
 }
+
+class TraverseAllAction : Action {
+    override val name = "递归搜索视图包含"
+    override suspend fun run(act: Activity) {
+
+        Log.i(
+            "TraverseAllAction",
+            findAllWith {
+                it.contentDescription != null
+            }.joinToString("\n")
+        )
+        // assert = [ Bottom, SubView ]
+
+    }
+}

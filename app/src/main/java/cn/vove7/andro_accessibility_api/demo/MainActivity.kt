@@ -55,7 +55,8 @@ class ActionAdapter(val onActionClick: (action: Action) -> Unit) :
             SelectTextAction(),
             ViewFinderWithLambda(),
             TextMatchAction(),
-            ClickTextAction()
+            ClickTextAction(),
+            TraverseAllAction(),
         )
     }
 

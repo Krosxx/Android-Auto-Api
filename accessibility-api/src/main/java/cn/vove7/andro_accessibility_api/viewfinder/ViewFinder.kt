@@ -2,7 +2,6 @@ package cn.vove7.andro_accessibility_api.viewfinder
 
 import android.view.accessibility.AccessibilityNodeInfo
 import cn.vove7.andro_accessibility_api.AccessibilityApi
-import cn.vove7.andro_accessibility_api.utils.NeedAccessibilityException
 import cn.vove7.andro_accessibility_api.utils.NeedBaseAccessibilityException
 import cn.vove7.andro_accessibility_api.viewnode.ViewNode
 
@@ -103,23 +102,17 @@ abstract class ViewFinder(val node: ViewNode?) {
             return null
         }
         node.children.forEach { childNode ->
-            if (childNode != null) {
-                if (!includeInvisible && !childNode.isVisibleToUser) {
-                    return@forEach
-                }
-                if (findCondition(childNode.node)) {
-                    if (all) {
-                        list.add(childNode)
-                    } else return childNode
-                } else {
-                    if (all) {
-                        traverseAllNode(childNode, true, includeInvisible, depth = depth + 1)
-                    } else {
-                        val r = traverseAllNode(childNode, includeInvisible, depth = depth + 1)
-                        if (r != null) return r
-                    }
-                    //深搜
-                }
+            if (!includeInvisible && !childNode.isVisibleToUser) {
+                return@forEach
+            }
+            if (findCondition(childNode.node)) {
+                if (all) {
+                    list.add(childNode)
+                } else return childNode
+            }
+            val r = traverseAllNode(childNode, all, includeInvisible, depth + 1)
+            if (!all && r != null) {
+                return r
             }
         }
         return null
