@@ -4,6 +4,9 @@ import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.graphics.Path
 import android.os.Build
+import android.os.Handler
+import android.os.HandlerThread
+import android.os.Looper
 import android.util.Pair
 import android.view.ViewConfiguration
 import androidx.annotation.RequiresApi
@@ -16,7 +19,7 @@ import cn.vove7.andro_accessibility_api.utils.ScreenAdapter
  * 手势api
  */
 
-private val gestureService: AccessibilityService?
+private val gestureService: AccessibilityService
     get() = if (AccessibilityApi.isGestureServiceEnable
         && Build.VERSION.SDK_INT > Build.VERSION_CODES.N
     ) AccessibilityApi.gestureService!!
@@ -42,9 +45,6 @@ fun gesture(
     points: Array<Pair<Int, Int>>,
     onCancel: Function0<Unit>? = null
 ): Boolean {
-    if (gestureService == null) {
-        return false
-    }
     val path = pointsToPath(points)
     return playGestures(listOf(GestureDescription.StrokeDescription(path, 0, duration)), onCancel)
 }
@@ -61,9 +61,6 @@ fun gesture(
     duration: Long, path: Path,
     onCancel: Function0<Unit>? = null
 ): Boolean {
-    if (gestureService == null) {
-        return false
-    }
     return playGestures(listOf(GestureDescription.StrokeDescription(path, 0, duration)), onCancel)
 }
 
@@ -150,7 +147,7 @@ fun playGestures(
     for (stroke in strokeList) {
         builder.addStroke(stroke)
     }
-    return gesturesWithoutHandler(builder.build(), onCancel)
+    return doGestures(builder.build(), onCancel)
 }
 
 /**
@@ -175,27 +172,38 @@ private fun pointsToPath(points: Array<Pair<Int, Int>>): Path {
  * @return Boolean
  */
 @RequiresApi(api = Build.VERSION_CODES.N)
-private fun gesturesWithoutHandler(
+private fun doGestures(
     description: GestureDescription,
     onCancel: Function0<Unit>?
 ): Boolean {
-    val gs = gestureService ?: return false
-    var result = ResultBox(false)
-    gs.dispatchGesture(description, object : AccessibilityService.GestureResultCallback() {
-        override fun onCompleted(gestureDescription: GestureDescription) {
-            result.setAndNotify(true)
-        }
+    // 主线程不指定Handler
+    val handler = if (Looper.myLooper() == Looper.getMainLooper()) null
+    else HandlerThread("ges").let {
+        it.start()
+        Handler(it.looper)
+    }
+    val result = ResultBox(false)
+    gestureService.dispatchGesture(
+        description,
+        object : AccessibilityService.GestureResultCallback() {
+            override fun onCompleted(gestureDescription: GestureDescription) {
+                result.setAndNotify(true)
+            }
 
-        override fun onCancelled(gestureDescription: GestureDescription) {
-            onCancel?.invoke()
-            result.setAndNotify(false)
-        }
-    }, null).also {
+            override fun onCancelled(gestureDescription: GestureDescription) {
+                onCancel?.invoke()
+                result.setAndNotify(false)
+            }
+        }, handler
+    ).also {
         if (!it) {
             return false
         }
     }
-    return result.blockedGet() ?: false
+    return (result.blockedGet() ?: false).also {
+        //结束 HanderThread
+        handler?.looper?.quitSafely()
+    }
 }
 
 /**
