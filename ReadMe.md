@@ -301,11 +301,11 @@ allprojects {
 
 ```groovy
 dependencies {
-	implementation 'com.gitee.Vove:Android-Accessibility-Api:Tag'
+	implementation 'com.github.Vove7:Android-Accessibility-Api:Tag'
 }
 ```
 
-the TAG is [![](https://jitpack.io/v/com.gitee.Vove/Android-Accessibility-Api.svg)](https://jitpack.io/#com.gitee.Vove/Android-Accessibility-Api)
+the TAG is [![](https://jitpack.io/v/com.github.Vove7/Android-Accessibility-Api.svg)](https://jitpack.io/#com.github.Vove7/Android-Accessibility-Api)
 
 ### 创建你的服务
 
