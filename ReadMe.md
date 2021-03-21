@@ -324,18 +324,6 @@ class BaseAccessibilityService : AccessibilityApi() {
     //启用 页面更新 回调
     override val enableListenAppScope: Boolean = true
     
-    override fun onCreate() {
-        //must set
-        baseService = this
-        super.onCreate()
-    }
-    
-    override fun onDestroy() {
-        //must set
-        baseService = null
-        super.onDestroy()
-    }
-    
     //页面更新回调
     override fun onPageUpdate(currentScope: AppScope) {
         Log.d("TAG", "onPageUpdate: $currentScope")

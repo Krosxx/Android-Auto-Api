@@ -19,11 +19,11 @@ abstract class ViewFinder(val node: ViewNode?) {
     }
 
     val startNode: ViewNode
-        get() = node ?: {
+        get() = node ?: run {
             val service = AccessibilityApi.baseService
                 ?: throw NeedBaseAccessibilityException()
             service.rootNodeOfAllWindows
-        }()
+        }
 
     /**
      * 等待搜索，在指定时间内循环搜索（视图更新），超时返回null

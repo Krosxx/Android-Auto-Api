@@ -1,6 +1,7 @@
 package cn.vove7.andro_accessibility_api
 
 import android.accessibilityservice.AccessibilityService
+import android.os.Build
 import android.view.View
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -34,6 +35,26 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
         private set
         get() = currentScope?.packageName
 
+    override fun onCreate() {
+        super.onCreate()
+        if(this::class.java == BASE_SERVICE_CLS) {
+            baseService = this
+        }
+        if(this::class.java == GESTURE_SERVICE_CLS) {
+            gestureService = this
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if(this::class.java == BASE_SERVICE_CLS) {
+            baseService = null
+        }
+        if(this::class.java == GESTURE_SERVICE_CLS) {
+            gestureService = null
+        }
+    }
+
     /**
      * ViewNode with rootInWindow
      */
@@ -41,11 +62,15 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
 
     //适应 多窗口 分屏
     val rootNodeOfAllWindows
-        get() = ViewNode.withChildren(
-            windows?.mapNotNull {
-                it.root?.let { r -> ViewNode(r) }
-            } ?: emptyList()
-        )
+        get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            ViewNode.withChildren(
+                windows?.mapNotNull {
+                    it.root?.let { r -> ViewNode(r) }
+                } ?: emptyList()
+            )
+        } else {
+            rootViewNode ?: ViewNode.withChildren(emptyList())
+        }
 
     val rootInWindow: AccessibilityNodeInfo?
         get() {
