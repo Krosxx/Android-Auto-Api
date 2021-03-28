@@ -40,7 +40,7 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
         if(this::class.java == BASE_SERVICE_CLS) {
             baseService = this
         }
-        if(this::class.java == GESTURE_SERVICE_CLS) {
+        if(isEnableGestureService() && this::class.java == GESTURE_SERVICE_CLS) {
             gestureService = this
         }
     }
@@ -50,7 +50,7 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
         if(this::class.java == BASE_SERVICE_CLS) {
             baseService = null
         }
-        if(this::class.java == GESTURE_SERVICE_CLS) {
+        if(isEnableGestureService() && this::class.java == GESTURE_SERVICE_CLS) {
             gestureService = null
         }
     }
@@ -147,6 +147,8 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
     companion object {
         lateinit var BASE_SERVICE_CLS: Class<*>
         lateinit var GESTURE_SERVICE_CLS: Class<*>
+
+        private fun isEnableGestureService() = ::GESTURE_SERVICE_CLS.isInitialized
 
         //无障碍基础服务
         var baseService: AccessibilityApi? = null
