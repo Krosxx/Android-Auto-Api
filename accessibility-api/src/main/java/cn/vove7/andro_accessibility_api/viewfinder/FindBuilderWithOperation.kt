@@ -6,7 +6,6 @@ import android.os.Build
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
 import cn.vove7.andro_accessibility_api.utils.ViewNodeNotFoundException
-import cn.vove7.andro_accessibility_api.utils.whileWaitTime
 import cn.vove7.andro_accessibility_api.viewnode.ViewNode
 import cn.vove7.andro_accessibility_api.viewnode.ViewOperation
 
@@ -17,24 +16,21 @@ import cn.vove7.andro_accessibility_api.viewnode.ViewOperation
  * 2018/8/10
  */
 
-abstract class FindBuilderWithOperation : ViewOperation {
+interface FindBuilderWithOperation : ViewOperation {
 
     companion object {
         var WAIT_MILLIS = 2000L
     }
 
-    lateinit var finder: ViewFinder
+    var finder: ViewFinder<*>
 
     /**
      * 找到第一个
      * @return ViewNode
      */
-    fun findFirst(): ViewNode? {
-        return finder.findFirst()
-    }
+    fun findFirst(): ViewNode? = finder.findFirst()
 
     fun waitFor(): ViewNode? = waitFor(30000L)
-
 
     /**
      *
@@ -48,6 +44,8 @@ abstract class FindBuilderWithOperation : ViewOperation {
         return waitFor(waitMillis) ?: throw ViewNodeNotFoundException(finder)
     }
 
+    fun exist(): Boolean = findFirst() != null
+
     /**
      *
      * @return list
@@ -56,38 +54,10 @@ abstract class FindBuilderWithOperation : ViewOperation {
         return finder.findAll()
     }
 
-    /**
-     * 默认10s等待时间
-     * @return Boolean
-     */
-    fun waitHide(): Boolean {
-        return waitHide(10000)
-    }
-
-    /**
-     * 等待消失  常用于加载View的消失
-     * @param waitMs max 60s
-     * @return Boolean false 超时 true 消失
-     */
-    fun waitHide(waitMs: Int): Boolean {
-        return whileWaitTime(waitMs.toLong()) {
-            if (findFirst() != null) {
-                null
-            }//显示，继续等待
-            else {
-                true
-            } //消失
-        } ?: false
-    }
-
-    fun waitHideUnsafely(waitMs: Int) {
-        if (!waitHide(waitMs)) throw IllegalStateException("视图未消失 $finder")
-    }
-
     private val node: ViewNode
         get() = require()
 
-    override val id: String get() = node.id
+    override val id get() = node.id
 
     override fun tryClick(): Boolean = node.tryClick()
 
@@ -115,6 +85,7 @@ abstract class FindBuilderWithOperation : ViewOperation {
 
     override var hintText: CharSequence?
         get() = node.hintText
+        @RequiresApi(Build.VERSION_CODES.O)
         set(value) {
             node.hintText = value
         }

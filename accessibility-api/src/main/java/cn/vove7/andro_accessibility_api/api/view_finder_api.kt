@@ -4,9 +4,7 @@ import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
 import cn.vove7.andro_accessibility_api.AccessibilityApi
 import cn.vove7.andro_accessibility_api.utils.times
-import cn.vove7.andro_accessibility_api.viewfinder.CustomViewFinder
-import cn.vove7.andro_accessibility_api.viewfinder.ViewFindBuilder
-import cn.vove7.andro_accessibility_api.viewfinder.ViewFinderWithMultiCondition
+import cn.vove7.andro_accessibility_api.viewfinder.*
 import cn.vove7.andro_accessibility_api.viewnode.ViewNode
 
 /**
@@ -18,16 +16,16 @@ import cn.vove7.andro_accessibility_api.viewnode.ViewNode
  */
 
 
-fun requireBaseAccessibility() {
-    AccessibilityApi.requireBaseAccessibility()
+fun requireBaseAccessibility(autoJump: Boolean = false) {
+    AccessibilityApi.requireBaseAccessibility(autoJump)
 }
 
 fun waitBaseAccessibility(waitMillis: Long = 30000) {
     AccessibilityApi.waitAccessibility(waitMillis, AccessibilityApi.BASE_SERVICE_CLS)
 }
 
-fun requireGestureAccessibility() {
-    AccessibilityApi.requireGestureAccessibility()
+fun requireGestureAccessibility(autoJump: Boolean = false) {
+    AccessibilityApi.requireGestureAccessibility(autoJump)
 }
 
 fun waitGestureAccessibility(waitMillis: Long = 30000) {
@@ -97,10 +95,8 @@ fun editor(): ViewFindBuilder {
  * @param depths Array<Int>
  * @return ViewFindBuilder
  */
-fun withDepths(depths: Array<Int>): ViewFindBuilder {
-    return ViewFindBuilder().apply {
-        this.depths(depths)
-    }
+fun withDepths(vararg depths: Int): ViewNode? {
+    return ViewFinder.findByDepths(*depths)
 }
 
 /**
@@ -110,8 +106,7 @@ fun withDepths(depths: Array<Int>): ViewFindBuilder {
  */
 fun containsText(vararg text: String): ViewFindBuilder {
     return ViewFindBuilder().apply {
-        viewFinderX.addViewTextCondition(*text)
-        viewFinderX.textMatchMode = ViewFinderWithMultiCondition.TEXT_MATCH_MODE_CONTAIN
+        containsText(*text)
     }
 }
 
@@ -123,8 +118,7 @@ fun containsText(vararg text: String): ViewFindBuilder {
  */
 fun matchesText(vararg regs: String): ViewFindBuilder {
     return ViewFindBuilder().apply {
-        viewFinderX.addViewTextCondition(*regs)
-        viewFinderX.textMatchMode = ViewFinderWithMultiCondition.TEXT_MATCH_MODE_REGEX
+        matchesText(*regs)
     }
 }
 

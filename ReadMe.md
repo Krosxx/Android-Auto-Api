@@ -85,6 +85,7 @@ withContext(Dispatchers.Main) {
 ### 视图搜索
 
 1. 提供一个基础类 `ViewFinder`， 并封装一个 `ViewFinderWithMultiCondition` 来指定搜索条件，实现快速搜索;查看所有方法：[view_finder_api.kt](accessibility-api/src/main/java/cn/vove7/andro_accessibility_api/api/view_finder_api.kt)
+1. 最新添加 `SmartFinder`，支持多条件(AND, OR)搜索，扩展性极高  
 
 `ViewFinder` 主要方法：
 
@@ -94,6 +95,9 @@ withContext(Dispatchers.Main) {
 | findAll(includeInvisible: Boolean = false): Array\<ViewNode> |               立即搜索，返回满足条件的所有结果               |
 |         waitFor(waitMillis: Long = 30000): ViewNode?         |   等待搜索，在指定时间内循环搜索（视图更新），超时返回null   |
 |      require(waitMillis: Long = WAIT_MILLIS): ViewNode       |                       等待超时抛出异常                       |
+|         findByDepths(vararg depths: Int): ViewNode?          |                       指定深度索引搜索                       |
+|                       exist(): Boolean                       |                是否存在 (findFirst() != null)                |
+|                      attachCoroutine()                       |              支持协程调用，支持cancel()打断搜索              |
 
 **示例1：** 等待 Chrome 打开 > 展开菜单
 
@@ -176,11 +180,77 @@ withContext(Dispatchers.Main) {
 }
 ```
 
-   
+3. SmartFinder
+
+> 扩展性极高，支持多条件(AND, OR)搜索
+>
+> 更多已支持的条件见：[SmartFinderConditions.kt](accessibility-api/src/main/java/cn/vove7/andro_accessibility_api/viewfinder/SmartFinderConditions.kt)
+
+```kotlin
+//SF 为 SmartFinder 缩写
+SF.text("SmartFinder测试").findFirst()
+//等效：
+SF.where(_text eq "SmartFinder测试").findFirst()
+
+//搜索 文本为123 或者 id为text1
+SF.text("123").or().id("text1").findFirst()
+```
+
+原始AND，OR
+
+```kotlin
+//搜索 所有isChecked
+SF.where { 
+    it.isChecked
+}.find()
+
+SF.where(IdCondition("view_id")).or(RTextEqCondition("[0-9]+")).find()
+//等效：
+SF.id("view_id").or().matchText("[0-9]+").find()
+```
+
+支持Group
+
+```kotlin
+// (text=="111" && desc=="111") || (text=="222" && desc=="222")
+SF.where(SF.text("111").desc("111"))
+            .or(SF.text("222").desc("222"))
+            .find()
+```
+
+
+
+3. 协程支持
+
+添加 `attachCoroutine` 方法，搜索等待可及时中断
+
+```kotlin
+fun run(act: Activity) = runBlocking {
+    val outterJob = coroutineContext[Job]
+    val searchJob = GlobalScope.async {
+        val t = SF.attachCoroutine()//attach当前协程上下文，需要主动调用
+          .containsText("周三").waitFor(10000)
+        AlertDialog.Builder(act).apply {
+            setMessage(t.toString())
+            withContext(Dispatchers.Main) {
+                show()
+            }
+        }
+    }
+    searchJob.invokeOnCompletion {
+        outterJob?.cancel()
+    }
+    delay(3000)
+    //取消搜索测试
+    searchJob.cancel()
+}
+```
+
+
 
 ## 视图节点(ViewNode)
 
-根据视图搜索得到 `ViewNode`，可进行的操作详见接口：[ViewOperation.kt](accessibility-api/src/main/java/cn/vove7/andro_accessibility_api/viewnode/ViewOperation.kt)
+根据`ViewFinder`搜索得到 `ViewNode`，可进行的操作详见接口：[ViewOperation.kt](accessibility-api/src/main/java/cn/vove7/andro_accessibility_api/viewnode/ViewOperation.kt)
 
 ## 全局手势
 
@@ -372,6 +442,9 @@ class BaseAccessibilityService : AccessibilityApi() {
 <!--flagRequestFilterKeyEvents-->
 ```
 
+其中 `android:accessibilityEventTypes="typeWindowStateChanged"` 可能会在视图搜索有延迟刷新视图树的问题， 
+可使用 `android:accessibilityEventTypes="typeAllMask"` 替换
+
 </details>
 
 #### 手势服务
@@ -553,3 +626,4 @@ AccessibilityApi.apply {
 - [nav_api.kt](accessibility-api/src/main/java/cn/vove7/andro_accessibility_api/api/nav_api.kt)
 - [nav_api.kt](accessibility-api/src/main/java/cn/vove7/andro_accessibility_api/api/nav_api.kt)
 - [ViewNode](accessibility-api/src/main/java/cn/vove7/andro_accessibility_api/viewnode/ViewNode.kt)
+- [SmartFinderConditions.kt](accessibility-api/src/main/java/cn/vove7/andro_accessibility_api/viewfinder/SmartFinderConditions.kt)

@@ -1,25 +1,22 @@
 package cn.vove7.andro_accessibility_api.demo.actions
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Path
 import android.graphics.RectF
 import android.os.Build
 import android.util.Log
 import android.util.Pair
+import android.widget.EditText
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import cn.vove7.andro_accessibility_api.api.*
-import cn.vove7.andro_accessibility_api.demo.DemoApp
-import cn.vove7.andro_accessibility_api.demo.DrawableActivity
-import cn.vove7.andro_accessibility_api.demo.MainActivity
-import cn.vove7.andro_accessibility_api.demo.toast
+import cn.vove7.andro_accessibility_api.demo.*
 import cn.vove7.andro_accessibility_api.ext.ScreenTextFinder
 import cn.vove7.andro_accessibility_api.utils.AdapterRectF
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
+import cn.vove7.andro_accessibility_api.viewfinder.*
+import kotlinx.coroutines.*
+import kotlin.coroutines.coroutineContext
 
 /**
  * # actoins
@@ -28,11 +25,11 @@ import kotlinx.coroutines.withContext
  * @author Vove
  */
 
-class BaseNavigatorAction : Action {
+class BaseNavigatorAction : Action() {
     override val name: String get() = "基础导航"
 
     override suspend fun run(act: Activity) {
-        requireBaseAccessibility()
+        requireBaseAccessibility(true)
         toast("下拉通知栏..")
         delay(1000)
         toast("快捷设置..")
@@ -59,12 +56,12 @@ class BaseNavigatorAction : Action {
     }
 }
 
-class PickScreenText : Action {
+class PickScreenText : Action() {
     override val name: String
         get() = "提取屏幕文字"
 
     override suspend fun run(act: Activity) {
-        requireBaseAccessibility()
+        requireBaseAccessibility(true)
         val ts = ScreenTextFinder().find().joinToString("\n\n")
         withContext(Dispatchers.Main) {
             AlertDialog.Builder(act).apply {
@@ -76,13 +73,13 @@ class PickScreenText : Action {
     }
 }
 
-class DrawableAction : Action {
+class DrawableAction : Action() {
     override val name: String
         get() = "手势画图 - Rect - Circle - Oval"
 
     @RequiresApi(Build.VERSION_CODES.N)
     override suspend fun run(act: Activity) {
-        requireBaseAccessibility()
+        requireBaseAccessibility(true)
         requireGestureAccessibility()
         act.startActivity(Intent(act, DrawableActivity::class.java))
         toast("1s后开始绘制，请不要触摸屏幕")
@@ -132,7 +129,7 @@ class DrawableAction : Action {
 
 }
 
-class WaitAppAction : Action {
+class WaitAppAction : Action() {
     override val name: String
         get() = "等待 Chrome 打开 - 展开菜单"
 
@@ -155,12 +152,12 @@ class WaitAppAction : Action {
     }
 }
 
-class ViewFinderWithLambda : Action {
+class ViewFinderWithLambda : Action() {
     override val name: String
         get() = "ViewFinderWithLambda"
 
     override suspend fun run(act: Activity) {
-        requireBaseAccessibility()
+        requireBaseAccessibility(true)
         val s = findAllWith {
             Log.d(TAG, "${it.text} ${it.isClickable}")
             it.isClickable
@@ -176,13 +173,13 @@ class ViewFinderWithLambda : Action {
     }
 }
 
-class TextMatchAction : Action {
+class TextMatchAction : Action() {
     override val name: String
         get() = "文本匹配"
 
 
     override suspend fun run(act: Activity) {
-        requireBaseAccessibility()
+        requireBaseAccessibility(true)
         val s = buildString {
             appendln("containsText(\"基础\").find()")
             appendln(containsText("基础").find().map { it.text })
@@ -204,12 +201,12 @@ class TextMatchAction : Action {
 
 val TAG = "Action"
 
-class SelectTextAction : Action {
+class SelectTextAction : Action() {
     override val name: String
         get() = "编辑文本 - 清空文本 - 选择文本 0-5"
 
     override suspend fun run(act: Activity) {
-        requireBaseAccessibility()
+        requireBaseAccessibility(true)
         editor().require().apply {
             repeat(5) {
                 appendText(".x")
@@ -229,24 +226,25 @@ class SelectTextAction : Action {
     }
 }
 
-class ClickTextAction : Action {
+class ClickTextAction : Action() {
 
     override val name: String
         get() = "点击文本"
 
     override suspend fun run(act: Activity) {
-        requireBaseAccessibility()
-        var targetText = act.edit_text.text.toString().trim()
+        requireBaseAccessibility(true)
+        val edit_text = act.findViewById<EditText>(R.id.edit_text)
+        var targetText = edit_text.text.toString().trim()
         if (targetText == "123456") {
             targetText = "文本匹配"
             withContext(Dispatchers.Main) {
-                act.edit_text.setText("文本匹配")
+                edit_text.setText("文本匹配")
             }
         }
         if (targetText.isEmpty()) {
             toast("请输入文本")
             withContext(Dispatchers.Main) {
-                act.edit_text.requestFocus()
+                edit_text.requestFocus()
             }
             return
         }
@@ -258,7 +256,7 @@ class ClickTextAction : Action {
     }
 }
 
-class TraverseAllAction : Action {
+class TraverseAllAction : Action() {
     override val name = "递归搜索视图包含"
     override suspend fun run(act: Activity) {
 
@@ -270,5 +268,87 @@ class TraverseAllAction : Action {
         )
         // assert = [ Bottom, SubView ]
 
+    }
+}
+
+class SmartFinderAction : Action() {
+    override val name = "SmartFinder测试"
+
+    override suspend fun run(act: Activity) {
+        requireBaseAccessibility(true)
+        val sb = StringBuilder()
+        val node = SF.text("SmartFinder测试").findFirst()
+        sb.appendLine(node?.toString())
+
+        val orFinder = SF.text("123").or().id("text1").findFirst()
+        sb.appendLine(orFinder?.toString())
+
+
+        try {
+            SF.find()
+        } catch (e: Throwable) {
+            sb.appendLine(e.message)
+        }
+
+        val customFinder = SF.containsText("Smart").where {
+            (node?.text?.length ?: 5) > 3
+        }.findFirst()
+        sb.appendLine(customFinder?.toString())
+
+        val f3 = SG(_text eq "aaa", _desc.."q", _desc contains "aa").findFirst()
+        sb.appendLine(f3?.toString())
+
+        val groupFinder = SG(SF.containsText("Smart").or().id("111")).findFirst()
+        sb.appendLine(groupFinder?.toString())
+
+        val s = SF.findByDepths(1, 0, 0)
+        sb.appendLine(s?.toString())
+
+        SF.where {
+            it.isChecked
+        }.find()
+
+//        SF.where(IdCondition("view_id")).or(RTextEqCondition("[0-9]+")).find()
+//        SF.id("view_id").or().matchText("[0-9]+").find()
+
+        //group  (text=="111" && desc=="111") || (text=="222" && desc=="222")
+        SF.where(SF.text("111").desc("111"))
+            .or(SF.text("222").desc("222"))
+            .find()
+
+        AlertDialog.Builder(act).apply {
+            setTitle("Output")
+            setMessage(sb.toString())
+            withContext(Dispatchers.Main) {
+                show()
+            }
+        }
+    }
+}
+
+class CorourtineStopAction : Action() {
+    override val name = "协程测试"
+    override suspend fun run(act: Activity) {
+        requireBaseAccessibility(true)
+        val job = GlobalScope.async {
+            val t = SF.attachCoroutine()
+                .containsText("周三").waitFor(10000)
+            AlertDialog.Builder(act).apply {
+                setTitle("Output")
+                setMessage(t.toString())
+                withContext(Dispatchers.Main) {
+                    show()
+                }
+            }
+        }
+        val j = coroutineContext[Job]
+        j?.invokeOnCompletion {
+            job.cancel()
+        }
+        job.invokeOnCompletion {
+            j?.cancel()
+        }
+        delay(3000)
+        job.cancel()
     }
 }

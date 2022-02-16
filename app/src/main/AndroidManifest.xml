@@ -3,6 +3,9 @@
     package="cn.vove7.andro_accessibility_api.demo">
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <queries>
+        <package android:name="com.android.chrome" />
+    </queries>
     <application
         android:name=".DemoApp"
         android:allowBackup="true"
@@ -11,7 +14,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -23,6 +28,7 @@
 
         <service
             android:name=".service.BaseAccessibilityService"
+            android:exported="false"
             android:description="@string/base_ser_desc"
             android:label="BaseService Demo"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
@@ -40,6 +46,7 @@
             android:name=".service.GestureAccessibilityService"
             android:description="@string/ges_ser_desc"
             android:label="Gesture Service Demo"
+            android:exported="false"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />

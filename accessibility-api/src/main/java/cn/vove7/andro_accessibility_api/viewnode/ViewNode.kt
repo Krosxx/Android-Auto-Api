@@ -7,6 +7,9 @@ import android.os.Bundle
 import android.view.ViewConfiguration
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+import cn.vove7.andro_accessibility_api.AccessibilityApi
+import cn.vove7.andro_accessibility_api.api.requireBaseAccessibility
 import cn.vove7.andro_accessibility_api.api.swipe
 import cn.vove7.andro_accessibility_api.utils.ScreenAdapter
 import cn.vove7.andro_accessibility_api.viewfinder.ViewFindBuilder
@@ -17,7 +20,11 @@ import java.lang.Thread.sleep
  * @property node 无障碍视图节点
  */
 @Suppress("MemberVisibilityCanBePrivate")
-class ViewNode(val node: AccessibilityNodeInfo) : ViewOperation, Comparable<ViewNode> {
+class ViewNode(
+    val node: AccessibilityNodeInfo
+) : ViewOperation, Comparable<ViewNode> {
+
+    val nodeWrapper = AccessibilityNodeInfoCompat.wrap(node)
 
     /**
      * 文本相似度
@@ -26,22 +33,48 @@ class ViewNode(val node: AccessibilityNodeInfo) : ViewOperation, Comparable<View
 
     private var childrenCache: Array<ViewNode>? = null
 
+    private var buildWithChildren = false
+
     companion object {
         var TRY_OP_NUM = 10
 
         private const val ROOT_TAG = "ViewNodeRoot"
 
+        private fun rootNodesOfAllWindows() =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                requireBaseAccessibility()
+                AccessibilityApi.baseService!!.windows?.mapNotNull {
+                    it.root?.let { r -> ViewNode(r) }
+                } ?: emptyList()
+            } else {
+                requireBaseAccessibility()
+                AccessibilityApi.baseService!!.activeWinNode?.let { listOf(it) } ?: emptyList()
+            }
+
+        /**
+         * 第一层为 windows
+         */
+        fun getRoot(): ViewNode {
+            return withChildren(rootNodesOfAllWindows())
+        }
+
+        fun activeWinNode(): ViewNode? {
+            requireBaseAccessibility()
+            return AccessibilityApi.baseService!!.rootInActiveWindow?.let { ViewNode(it) }
+        }
+
         fun withChildren(cs: List<ViewNode>): ViewNode {
             val root = AccessibilityNodeInfo.obtain()
             root.className = "${ROOT_TAG}[Win Size: ${cs.size}]"
-            return ViewNode(root).also {
-                it.childrenCache = cs.toTypedArray()
+            return ViewNode(root).apply {
+                buildWithChildren = true
+                childrenCache = cs.toTypedArray()
             }
         }
     }
 
     override val id: String
-        get() = node.viewIdResourceName
+        get() = nodeWrapper.viewIdResourceName
 
     override val boundsInParent: Rect
         get() {
@@ -59,12 +92,7 @@ class ViewNode(val node: AccessibilityNodeInfo) : ViewOperation, Comparable<View
         }
 
     override val parent: ViewNode?
-        get() {
-            val it = node.parent
-            return if (it != null) {
-                ViewNode(it)
-            } else null
-        }
+        get() = node.parent?.let { ViewNode(it) }
 
     override fun tryClick(): Boolean {
         return tryOp(AccessibilityNodeInfo.ACTION_CLICK)
@@ -96,10 +124,17 @@ class ViewNode(val node: AccessibilityNodeInfo) : ViewOperation, Comparable<View
         return i != TRY_OP_NUM
     }
 
+    fun clearChildCache() {
+        if (!buildWithChildren) {
+            childrenCache = null
+        }
+    }
+
     override val children: Array<ViewNode>
         get() {
-            if (childrenCache != null) {//10s有效期
-                return childrenCache ?: emptyArray()
+            val cc = childrenCache
+            if (cc != null) {
+                return cc
             }
             return (0 until node.childCount).mapNotNull { i ->
                 node.getChild(i)?.let { ViewNode(it) }
@@ -110,13 +145,18 @@ class ViewNode(val node: AccessibilityNodeInfo) : ViewOperation, Comparable<View
 
     override fun getChildCount(): Int = node.childCount
 
-
     override fun childAt(i: Int): ViewNode? {
-        val cn = node.getChild(i)
-        if (cn != null) {
-            return ViewNode(cn)
+        //IllegalStateException: Cannot perform this action on a not sealed instance.
+        if (buildWithChildren) {
+            return childrenCache?.get(i)
         }
-        return null
+        val cn = try {
+            node.getChild(i)
+        } catch (e: IllegalStateException) {
+            e.printStackTrace()
+            null
+        }
+        return cn?.let { ViewNode(it) }
     }
 
     override fun click(): Boolean = node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
@@ -172,11 +212,19 @@ class ViewNode(val node: AccessibilityNodeInfo) : ViewOperation, Comparable<View
     }
 
     override fun scrollForward(): Boolean {
-        return node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD.id)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD.id)
+        } else {
+            false
+        }
     }
 
     override fun scrollBackward(): Boolean {
-        return node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD.id)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD.id)
+        } else {
+            false
+        }
     }
 
     override fun scrollLeft(): Boolean {
@@ -197,7 +245,7 @@ class ViewNode(val node: AccessibilityNodeInfo) : ViewOperation, Comparable<View
 
     override var text: CharSequence?
         get() {
-            node.refresh()
+            refresh()
             return node.text
         }
         set(v) {
@@ -291,7 +339,11 @@ class ViewNode(val node: AccessibilityNodeInfo) : ViewOperation, Comparable<View
 
 
     private fun nodeSummary(node: AccessibilityNodeInfo): String {
-        val id = node.viewIdResourceName
+        val id = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            node.viewIdResourceName
+        } else {
+            null
+        }
         val desc = node.contentDescription
 
         return "{ class: " + classType +
@@ -306,7 +358,7 @@ class ViewNode(val node: AccessibilityNodeInfo) : ViewOperation, Comparable<View
                 (if (!node.isEnabled) ", Disabled" else "") +
                 (if (node.isPassword) ", Password" else "") +
                 (if (node.isChecked) ", Checked" else "") +
-                (if (node.isDismissable) ", Dismissable" else "") +
+                (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && node.isDismissable) ", Dismissable" else "") +
                 " }"
     }
 
@@ -332,13 +384,22 @@ class ViewNode(val node: AccessibilityNodeInfo) : ViewOperation, Comparable<View
     }
 
     override fun refresh(): Boolean {
-        if (className?.startsWith(ROOT_TAG) == true) {
-            childrenCache = null
+        if (buildWithChildren) {
+            childrenCache = rootNodesOfAllWindows().toTypedArray()
+            return true
         }
-        return node.refresh()
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            node.refresh()
+        } else {
+            false
+        }
     }
 
     override val actionList: List<AccessibilityNodeInfo.AccessibilityAction>
-        get() = node.actionList
+        get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            node.actionList
+        } else {
+            emptyList()
+        }
 
 }

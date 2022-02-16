@@ -9,7 +9,7 @@ import cn.vove7.andro_accessibility_api.viewfinder.ViewFindBuilder
  * ViewNode 操作方法集合
  */
 interface ViewOperation {
-    val id: String
+    val id: String?
 
     /**
      * 尝试点击

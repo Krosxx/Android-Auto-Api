@@ -1,7 +1,7 @@
 package cn.vove7.andro_accessibility_api
 
 import android.accessibilityservice.AccessibilityService
-import android.os.Build
+import android.annotation.SuppressLint
 import android.view.View
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -37,50 +37,40 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
 
     override fun onCreate() {
         super.onCreate()
-        if(this::class.java == BASE_SERVICE_CLS) {
+        if (this::class.java == BASE_SERVICE_CLS) {
             baseService = this
         }
-        if(isEnableGestureService() && this::class.java == GESTURE_SERVICE_CLS) {
+        if (isEnableGestureService() && this::class.java == GESTURE_SERVICE_CLS) {
             gestureService = this
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        if(this::class.java == BASE_SERVICE_CLS) {
+        if (this::class.java == BASE_SERVICE_CLS) {
             baseService = null
         }
-        if(isEnableGestureService() && this::class.java == GESTURE_SERVICE_CLS) {
+        if (isEnableGestureService() && this::class.java == GESTURE_SERVICE_CLS) {
             gestureService = null
         }
     }
 
     /**
-     * ViewNode with rootInWindow
+     * ViewNode with rootInActiveWindow
      */
-    val rootViewNode: ViewNode? get() = rootInWindow?.let { ViewNode(it) }
+    val activeWinNode: ViewNode? get() = ViewNode.activeWinNode()
 
     //适应 多窗口 分屏
-    val rootNodeOfAllWindows
-        get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            ViewNode.withChildren(
-                windows?.mapNotNull {
-                    it.root?.let { r -> ViewNode(r) }
-                } ?: emptyList()
-            )
-        } else {
-            rootViewNode ?: ViewNode.withChildren(emptyList())
-        }
+    val rootNodeOfAllWindows get() = ViewNode.getRoot()
 
-    val rootInWindow: AccessibilityNodeInfo?
-        get() {
-            return try {
-                rootInActiveWindow //will occur exception
-            } catch (e: Exception) {
-                e.printStackTrace()
-                null
-            }
+    override fun getRootInActiveWindow(): AccessibilityNodeInfo? {
+        return try {
+            super.getRootInActiveWindow()
+        } catch (e: Throwable) {
+            e.printStackTrace()
+            null
         }
+    }
 
     /**
      * 更新当前[currentScope]
@@ -115,7 +105,7 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
     open fun onPageUpdate(currentScope: AppScope) {}
 
     private fun pageIsView(pageName: String): Boolean = try {
-        Class.forName(pageName) is View
+        View::class.java.isAssignableFrom(Class.forName(pageName))
     } catch (e: ClassNotFoundException) {
         false
     }
@@ -151,12 +141,14 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
         private fun isEnableGestureService() = ::GESTURE_SERVICE_CLS.isInitialized
 
         //无障碍基础服务
+        @SuppressLint("StaticFieldLeak")
         var baseService: AccessibilityApi? = null
 
         //无障碍高级服务 执行手势等操作
         /**
          * GestureService base on AccessibilityApi
          */
+        @SuppressLint("StaticFieldLeak")
         var gestureService: AccessibilityService? = null
 
         // currentAppScope
@@ -195,23 +187,21 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
         }
 
         //声明 需要基础无障碍权限
-        fun requireBaseAccessibility() {
+        fun requireBaseAccessibility(autoJump: Boolean = false) {
             if (!isBaseServiceEnable) {
-                jumpAndThrow(BASE_SERVICE_CLS)
+                if (autoJump) jumpAccessibilityServiceSettings(BASE_SERVICE_CLS)
+                throw NeedAccessibilityException(BASE_SERVICE_CLS.name)
             }
         }
 
         //声明 需要手势无障碍权限
-        fun requireGestureAccessibility() {
+        fun requireGestureAccessibility(autoJump: Boolean = false) {
             if (!isGestureServiceEnable) {
-                jumpAndThrow(GESTURE_SERVICE_CLS)
+                if (autoJump) jumpAccessibilityServiceSettings(GESTURE_SERVICE_CLS)
+                throw NeedAccessibilityException(GESTURE_SERVICE_CLS.name)
             }
         }
 
-        private fun jumpAndThrow(cls: Class<*>) {
-            jumpAccessibilityServiceSettings(cls)
-            throw NeedAccessibilityException(cls.name)
-        }
     }
 
 }

@@ -1,9 +1,10 @@
 package cn.vove7.andro_accessibility_api.viewfinder
 
-import android.util.Range
+import android.os.Build
 import android.view.accessibility.AccessibilityNodeInfo
 import cn.vove7.andro_accessibility_api.utils.compareSimilarity
 import cn.vove7.andro_accessibility_api.viewnode.ViewNode
+import kotlin.coroutines.CoroutineContext
 
 /**
  * # ViewFinderWithMultiCondition
@@ -11,9 +12,12 @@ import cn.vove7.andro_accessibility_api.viewnode.ViewNode
  * @author 17719
  * 2018/8/5
  */
-class ViewFinderWithMultiCondition(node: ViewNode? = null) : ViewFinder(node) {
+open class ViewFinderWithMultiCondition(
+    override val node: ViewNode? = null
+) : ViewFinder<ViewFinderWithMultiCondition> {
+    override var coroutineCtx: CoroutineContext? = null
 
-    var viewTextCondition: MutableList<String> = mutableListOf()
+    private var viewTextCondition: MutableList<String> = mutableListOf()
 
     fun addViewTextCondition(vararg s: String) {
         viewTextCondition.addAll(s)
@@ -26,59 +30,7 @@ class ViewFinderWithMultiCondition(node: ViewNode? = null) : ViewFinder(node) {
     var editable: Boolean? = null
     var scrollable: Boolean? = null
     var typeNames: MutableList<String> = mutableListOf()
-    var textLengthLimit: Range<Int>? = null
-    var depths: Array<Int> = arrayOf()
-        set(value) {
-            findBy = BY_DEPTHS
-            field = value
-        }
-
-    //    var extraParams: Array<String> = arrayOf()
-    var findBy: Int = BY_PROPERTY
-
-    override fun findFirst(includeInvisible: Boolean): ViewNode? {
-        return when (findBy) {
-            BY_DEPTHS -> {
-                findByDepths()
-            }
-            //            BY_PROPERTY
-            else -> {
-                super.findFirst(includeInvisible)
-            }
-        }
-    }
-
-    /**
-     * 使用深度搜索
-     * @param depths Array<Int>
-     * @return ViewNode?
-     */
-    fun findByDepths(): ViewNode? {
-        var p: ViewNode? = startNode
-
-        depths.forEach {
-            try {
-                p = p?.childAt(it)
-            } catch (e: ArrayIndexOutOfBoundsException) {
-                return null
-            }
-            if (p == null) {
-                return null
-            }
-        }
-        if (p == null) {
-            return null
-        }
-
-        val pp = p!!
-        return if (typeNames.isNotEmpty()) {
-            if ("${pp.className}".contains(typeNames[0], ignoreCase = true))
-                pp
-            else {
-                null
-            }
-        } else pp
-    }
+    var textLengthLimit: IntRange? = null
 
     /**
      * 按查找条件查询
@@ -89,8 +41,8 @@ class ViewFinderWithMultiCondition(node: ViewNode? = null) : ViewFinder(node) {
      */
     override fun findCondition(node: AccessibilityNodeInfo): Boolean {
         //could not remove "$.." prevent cause null
-        val vid = "${node.viewIdResourceName}"
-        if (viewId != null) {
+        if (viewId != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            val vid = node.viewIdResourceName ?: ""
             if (!vid.endsWith("/$viewId") && vid != viewId)
             // :id/view_id) //网页视图 id : id
                 return false
@@ -132,7 +84,9 @@ class ViewFinderWithMultiCondition(node: ViewNode? = null) : ViewFinder(node) {
             return false
         }
         //可编辑
-        if (editable != null && node.isEditable != editable) {
+        if (editable != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2
+            && node.isEditable != editable
+        ) {
             return false
         }
         return true
@@ -145,7 +99,6 @@ class ViewFinderWithMultiCondition(node: ViewNode? = null) : ViewFinder(node) {
                 (if (viewId != null) ", viewId=$viewId" else "") +
                 (if (descTexts.isNotEmpty()) ", desc=$descTexts" else "") +
                 (if (typeNames.isNotEmpty()) ", typeNames=$typeNames" else "") +
-                (if (depths.isNotEmpty()) ", depths=${depths.contentToString()}" else "") +
                 (if (editable == true) ", editable=$editable" else "") +
                 (if (scrollable == true) ", scrollable=$scrollable)" else "") + ")"
     }
@@ -157,9 +110,6 @@ class ViewFinderWithMultiCondition(node: ViewNode? = null) : ViewFinder(node) {
         const val TEXT_MATCH_MODE_FUZZY_WITHOUT_PINYIN = 4
         //        const val TEXT_MATCH_MODE_FUZZY_WITH_PINYIN = 5
 
-        const val BY_PROPERTY = 0
-        const val BY_DEPTHS = 1
-
         var TEXT_SIMILARITY = 0.75
 
         private val matchFunctions = mutableMapOf(
@@ -167,7 +117,7 @@ class ViewFinderWithMultiCondition(node: ViewNode? = null) : ViewFinder(node) {
                 it.equals(text, ignoreCase = true)
             },
             TEXT_MATCH_MODE_CONTAIN to { it: String, text: String ->
-                text != null && text.contains(it, ignoreCase = true)
+                text.contains(it, ignoreCase = true)
             },
             TEXT_MATCH_MODE_REGEX to { it: String, text: String ->
                 it.toRegex().matches(text)

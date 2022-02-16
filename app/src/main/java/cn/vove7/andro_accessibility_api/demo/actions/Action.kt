@@ -8,7 +8,10 @@ import android.app.Activity
  * Created on 2020/6/10
  * @author Vove
  */
-interface Action {
-    val name: String
-    suspend fun run(act: Activity)
+abstract class Action {
+    abstract val name: String
+    abstract suspend fun run(act: Activity)
+
+    override fun toString() = name
+
 }

@@ -2,8 +2,9 @@ package cn.vove7.andro_accessibility_api.demo
 
 import android.graphics.Color
 import android.os.Bundle
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.activity_drawable.*
+import me.panavtec.drawableview.DrawableView
 import me.panavtec.drawableview.DrawableViewConfig
 
 /**
@@ -13,6 +14,14 @@ import me.panavtec.drawableview.DrawableViewConfig
  * @author Vove
  */
 class DrawableActivity : AppCompatActivity() {
+
+    val button_clear by lazy {
+        findViewById<Button>(R.id.button_clear)
+    }
+
+    val drawable_view by lazy {
+        findViewById<DrawableView>(R.id.drawable_view)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

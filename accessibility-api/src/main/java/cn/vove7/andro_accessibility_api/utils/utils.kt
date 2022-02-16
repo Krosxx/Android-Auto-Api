@@ -9,6 +9,7 @@ import android.os.SystemClock
 import android.provider.Settings
 import android.widget.Toast
 import cn.vove7.andro_accessibility_api.InitCp
+import java.util.*
 import kotlin.math.max
 
 /**
@@ -58,8 +59,8 @@ fun compareSimilarity(str1: String, str2: String, ignoreCase: Boolean = true): F
     var s1 = str1
     var s2 = str2
     if (ignoreCase) {
-        s1 = str1.toLowerCase()
-        s2 = str2.toLowerCase()
+        s1 = str1.lowercase(Locale.getDefault())
+        s2 = str2.lowercase(Locale.getDefault())
     }
     //计算两个字符串的长度
     val len1 = s1.length
@@ -86,7 +87,7 @@ fun compareSimilarity(str1: String, str2: String, ignoreCase: Boolean = true): F
             dif[i][j] = arrayOf(
                 dif[i - 1][j - 1] + temp, dif[i][j - 1] + 1,
                 dif[i - 1][j] + 1
-            ).min()!!
+            ).minOrNull()!!
         }
     }
     return 1 - dif[len1][len2].toFloat() / max(s1.length, s2.length)
