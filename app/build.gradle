@@ -2,6 +2,14 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
+    signingConfigs {
+        debug {
+            storeFile file('KEY')
+            storePassword '1234567890'
+            keyAlias 'key'
+            keyPassword '1234567890'
+        }
+    }
     compileSdkVersion 31
     buildToolsVersion "29.0.3"
 
@@ -20,9 +28,13 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
         }
     }
 }
