@@ -64,9 +64,11 @@ object _text {
 
 abstract class RegexCondition(private val regex: String) : MatchCondition {
     abstract fun AcsNode.nodeText(): String?
+    private val reg = regex.toRegex()
+
     override fun invoke(node: AcsNode) =
         node.nodeText()?.let {
-            regex.toRegex().matches(it)
+            reg.matches(it)
         } ?: false
 }
 
@@ -140,6 +142,7 @@ class TextOrDescEqCondition(private val texts: Array<out String>) : MatchConditi
     init {
         requireNotEmpty(texts)
     }
+
     override fun invoke(node: AcsNode): Boolean {
         return TextEqCondition(texts)(node) || DescEqCondition(texts)(node)
     }
