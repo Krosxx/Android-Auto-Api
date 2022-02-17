@@ -246,6 +246,42 @@ fun run(act: Activity) = runBlocking {
 }
 ```
 
+4. 条件扩展
+
+> 封装自定义搜索条件，使调用起来更简洁
+> 库中搜索条件全部实现位于 `SmartFinderConditions.kt`
+
+例如 定义使用正则匹配Node文本
+
+##### Step 1.
+```kotlin
+class TextMatcherCondition(private val regex: String) : MatchCondition {
+	//此处注意直接创建Regex，防止在搜索时重复创建；另外可直接检查正则表达式有效性
+    private val reg = regex.toRegex()
+    override fun invoke(node: AcsNode) =
+        node.text?.toString()?.let {
+            reg.matches(it)
+        } ?: false
+}
+```
+
+此时，已经可以这样使用：
+
+```kotlin
+SF.where(TextMatcherCondition("[0-9]+")).findAll()
+```
+追究简洁，可进行扩展方法：
+
+##### Step 2.
+```kotlin
+fun ConditionGroup.matchText(reg: String) = link(TextMatcherCondition(reg))
+```
+
+之后可简化调用
+
+```kotlin
+SF.matchText("[0-9]+").findAll()
+```
 
 
 ## 视图节点(ViewNode)
@@ -361,7 +397,7 @@ class DrawableAction : Action {
 ```groovy
 allprojects {
 	repositories {
-		...
+		//...
 		maven { url 'https://jitpack.io' }
 	}
 }

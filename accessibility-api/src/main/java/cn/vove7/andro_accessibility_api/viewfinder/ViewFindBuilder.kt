@@ -15,7 +15,7 @@ import cn.vove7.andro_accessibility_api.viewnode.ViewNode
 class ViewFindBuilder(
     node: ViewNode? = null
 ) : ViewFinderWithMultiCondition(node),
-    FindBuilderWithOperation {
+    FinderBuilderWithOperation {
 
     /**
      * DSL

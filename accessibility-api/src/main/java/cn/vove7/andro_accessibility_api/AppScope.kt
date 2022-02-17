@@ -11,15 +11,15 @@ data class AppScope(
     var packageName: String,
     var pageName: String
 ) {
-    override fun equals(that: Any?): Boolean {
-        if (that == null || that !is AppScope) return false
+    override fun equals(other: Any?): Boolean {
+        if (other == null || other !is AppScope) return false
 
-        return packageName.startsWith(that.packageName) &&
-                pageName.isEmpty() || that.pageName.isEmpty() ||
-                pageName.endsWith("." + that.pageName) ||
-                pageName.endsWith("$" + that.pageName) ||
-                that.pageName.endsWith(".$pageName") ||
-                that.pageName.endsWith("$$pageName")
+        return packageName.startsWith(other.packageName) &&
+                pageName.isEmpty() || other.pageName.isEmpty() ||
+                pageName.endsWith("." + other.pageName) ||
+                pageName.endsWith("$" + other.pageName) ||
+                other.pageName.endsWith(".$pageName") ||
+                other.pageName.endsWith("$$pageName")
 
     }
 }

@@ -32,6 +32,8 @@ private val gestureService: AccessibilityService
  */
 fun setScreenSize(width: Int, height: Int) = ScreenAdapter.setScreenSize(width, height)
 
+fun resetScreenSize() = ScreenAdapter.reset()
+
 /**
  * 根据点坐标生成路径 执行手势
  * @param duration Long
@@ -76,9 +78,7 @@ fun gesture(
     duration: Long, paths: Array<Path>,
     onCancel: Function0<Unit>? = null
 ): Boolean {
-    if (gestureService == null) {
-        return false
-    }
+    requireGestureAccessibility()
     return playGestures(
         paths.map { GestureDescription.StrokeDescription(it, 0, duration) },
         onCancel
@@ -95,7 +95,6 @@ fun gestureAsync(
     duration: Long,
     points: Array<Pair<Int, Int>>
 ) {
-    gestureService ?: return
     val path = pointsToPath(points)
     doGesturesAsync(listOf(GestureDescription.StrokeDescription(path, 0, duration)))
 }
@@ -110,7 +109,6 @@ fun gestures(
     duration: Long, ppss: Array<Array<Pair<Int, Int>>>,
     onCancel: Function0<Unit>? = null
 ): Boolean {
-    gestureService ?: return false
     val list = mutableListOf<GestureDescription.StrokeDescription>()
     ppss.forEach {
         list.add(GestureDescription.StrokeDescription(pointsToPath(it), 0, duration))
@@ -125,7 +123,6 @@ fun gestures(
  */
 @RequiresApi(Build.VERSION_CODES.N)
 fun gesturesAsync(duration: Long, ppss: Array<Array<Pair<Int, Int>>>) {
-    gestureService ?: return
     val list = mutableListOf<GestureDescription.StrokeDescription>()
     ppss.forEach {
         list.add(GestureDescription.StrokeDescription(pointsToPath(it), 0, duration))
@@ -216,7 +213,7 @@ fun doGesturesAsync(strokeList: List<GestureDescription.StrokeDescription>) {
     for (stroke in strokeList) {
         builder.addStroke(stroke)
     }
-    gestureService?.dispatchGesture(builder.build(), null, null)
+    gestureService.dispatchGesture(builder.build(), null, null)
 }
 
 @RequiresApi(Build.VERSION_CODES.N)

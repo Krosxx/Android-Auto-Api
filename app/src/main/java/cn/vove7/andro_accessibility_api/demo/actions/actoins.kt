@@ -181,11 +181,11 @@ class TextMatchAction : Action() {
     override suspend fun run(act: Activity) {
         requireBaseAccessibility(true)
         val s = buildString {
-            appendln("containsText(\"基础\").find()")
-            appendln(containsText("基础").find().map { it.text })
-            appendln()
-            appendln("matchesText(\"[a-zA-Z]+\").find()")
-            appendln(matchesText("[a-zA-Z]+").find().map { it.text })
+            appendLine("containsText(\"基础\").find()")
+            appendLine(containsText("基础").find().map { it.text })
+            appendLine()
+            appendLine("matchesText(\"[a-zA-Z]+\").find()")
+            appendLine(matchesText("[a-zA-Z]+").find().map { it.text })
 
         }
         withContext(Dispatchers.Main) {
@@ -326,7 +326,8 @@ class SmartFinderAction : Action() {
     }
 }
 
-class CorourtineStopAction : Action() {
+@DelicateCoroutinesApi
+class CoroutineStopAction : Action() {
     override val name = "协程测试"
     override suspend fun run(act: Activity) {
         requireBaseAccessibility(true)

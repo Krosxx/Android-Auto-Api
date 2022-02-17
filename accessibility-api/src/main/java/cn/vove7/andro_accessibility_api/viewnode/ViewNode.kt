@@ -79,6 +79,7 @@ class ViewNode(
     override val boundsInParent: Rect
         get() {
             val out = Rect()
+            @Suppress("DEPRECATION")
             node.getBoundsInParent(out)
             return out
         }
@@ -98,13 +99,17 @@ class ViewNode(
         return tryOp(AccessibilityNodeInfo.ACTION_CLICK)
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     override fun globalClick(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            //获得中心点
-            val relp = ScreenAdapter.getRelPoint(getCenterPoint())
-            return cn.vove7.andro_accessibility_api.api.click(relp.x, relp.y)
-        }
-        return false
+        //获得中心点
+        val relp = ScreenAdapter.getRelPoint(getCenterPoint())
+        return cn.vove7.andro_accessibility_api.api.click(relp.x, relp.y)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.N)
+    override fun globalLongClick(): Boolean {
+        val relp = ScreenAdapter.getRelPoint(getCenterPoint())
+        return cn.vove7.andro_accessibility_api.api.longClick(relp.x, relp.y)
     }
 
     /**
@@ -180,6 +185,7 @@ class ViewNode(
         return node.performAction(AccessibilityNodeInfo.ACTION_SELECT)
     }
 
+    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     override fun setSelection(start: Int, end: Int): Boolean {
         val args = Bundle()
         args.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, start)
@@ -195,36 +201,23 @@ class ViewNode(
         return tryOp(AccessibilityNodeInfo.ACTION_SELECT)
     }
 
-    override fun scrollUp(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_UP.id)
-        } else {
-            false
-        }
-    }
+    @RequiresApi(Build.VERSION_CODES.M)
+    override fun scrollUp() =
+        node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_UP.id)
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun scrollDown(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_DOWN.id)
-        } else {
-            false
-        }
+        return node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_DOWN.id)
     }
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun scrollForward(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD.id)
-        } else {
-            false
-        }
+        return node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD.id)
     }
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun scrollBackward(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD.id)
-        } else {
-            false
-        }
+        return node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD.id)
     }
 
     override fun scrollLeft(): Boolean {
@@ -248,6 +241,7 @@ class ViewNode(
             refresh()
             return node.text
         }
+        @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
         set(v) {
             val arg = Bundle()
             arg.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, v)
@@ -269,6 +263,7 @@ class ViewNode(
         return node.contentDescription?.toString()
     }
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun appendText(s: CharSequence) {
         text = buildString {
             append(text)
@@ -276,7 +271,7 @@ class ViewNode(
         }
     }
 
-
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun trySetText(text: CharSequence): Boolean {
         val arg = Bundle()
         arg.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
@@ -323,7 +318,7 @@ class ViewNode(
         return ViewInfo(
             text,
             node.contentDescription,
-            classType,
+            className,
             boundsInParent,
             bounds
 //                node.isClickable,
@@ -332,11 +327,7 @@ class ViewNode(
         )
     }
 
-    val className get() = classType
-
-    val classType: String?
-        get() = node.className.let { it.substring(it.lastIndexOf('.') + 1) }
-
+    override val className get() = node.className?.toString()
 
     private fun nodeSummary(node: AccessibilityNodeInfo): String {
         val id = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
@@ -346,7 +337,7 @@ class ViewNode(
         }
         val desc = node.contentDescription
 
-        return "{ class: " + classType +
+        return "{ class: " + className +
                 (if (id == null) "" else ", id: " + id.substring(id.lastIndexOf('/') + 1)) +
                 (if (node.text == null) "" else ", text: ${node.text}") +
                 (if (hintText == null) "" else ", hintText: $hintText") +
@@ -396,10 +387,6 @@ class ViewNode(
     }
 
     override val actionList: List<AccessibilityNodeInfo.AccessibilityAction>
-        get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            node.actionList
-        } else {
-            emptyList()
-        }
-
+        @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+        get() = node.actionList
 }

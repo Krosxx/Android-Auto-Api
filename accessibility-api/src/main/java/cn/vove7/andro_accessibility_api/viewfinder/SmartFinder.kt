@@ -30,12 +30,12 @@ class ConditionNode(
     override fun check(node: AccessibilityNodeInfo) = condition(node)
 }
 
-interface ConditionGroup : Condition, ConditionBuilder, FindBuilderWithOperation {
+interface ConditionGroup : Condition, ViewFinder<ConditionGroup>, FinderBuilderWithOperation {
 
     val conditions: MutableList<Condition>
     var lastType: ConditionType
 
-    override fun and(vararg conditions: MatchCondition): ConditionGroup {
+    fun and(vararg conditions: MatchCondition): ConditionGroup {
         if (conditions.isEmpty()) {
             lastType = ConditionType.AND
             return this
@@ -46,22 +46,22 @@ interface ConditionGroup : Condition, ConditionBuilder, FindBuilderWithOperation
         return this
     }
 
-    override fun link(cond: MatchCondition) =
+    fun link(cond: MatchCondition) =
         if (lastType == ConditionType.AND) {
             and(cond)
         } else or(cond)
 
-    override fun and(cond: MatchCondition): ConditionGroup {
+    fun and(cond: MatchCondition): ConditionGroup {
         this.conditions.add(ConditionNode(ConditionType.AND, cond))
         return this
     }
 
-    override fun or(cond: MatchCondition): ConditionGroup {
+    fun or(cond: MatchCondition): ConditionGroup {
         this.conditions.add(ConditionNode(ConditionType.OR, cond))
         return this
     }
 
-    override fun or(vararg conditions: MatchCondition): ConditionGroup {
+    fun or(vararg conditions: MatchCondition): ConditionGroup {
         if (conditions.isEmpty()) {
             lastType = ConditionType.OR
             return this
@@ -72,13 +72,13 @@ interface ConditionGroup : Condition, ConditionBuilder, FindBuilderWithOperation
         return this
     }
 
-    override fun and(group: ConditionGroup): ConditionGroup {
+    fun and(group: ConditionGroup): ConditionGroup {
         group.type = ConditionType.AND
         conditions.add(group)
         return this
     }
 
-    override fun or(group: ConditionGroup): ConditionGroup {
+    fun or(group: ConditionGroup): ConditionGroup {
         group.type = ConditionType.OR
         conditions.add(group)
         return this
@@ -105,22 +105,9 @@ interface ConditionGroup : Condition, ConditionBuilder, FindBuilderWithOperation
         // all pass
         return true
     }
-}
 
-interface ConditionBuilder {
-
-    fun and(vararg conditions: MatchCondition): ConditionGroup
-    fun and(cond: MatchCondition): ConditionGroup
     fun where(cond: MatchCondition): ConditionGroup = and(cond)
-
-    fun or(vararg conditions: MatchCondition): ConditionGroup
-    fun or(cond: MatchCondition): ConditionGroup
-    fun link(cond: MatchCondition): ConditionGroup
-
-    fun and(group: ConditionGroup): ConditionGroup
     fun where(group: ConditionGroup): ConditionGroup = and(group)
-    fun or(group: ConditionGroup): ConditionGroup
-
 }
 
 fun SG(vararg conditions: MatchCondition) = SF.apply {
@@ -135,7 +122,7 @@ val SF get() = SmartFinder()
 
 class SmartFinder(
     override val node: ViewNode? = null
-) : ViewFinder<SmartFinder>, ConditionGroup {
+) : ConditionGroup {
     override var coroutineCtx: CoroutineContext? = null
 
     override var lastType: ConditionType = ConditionType.AND

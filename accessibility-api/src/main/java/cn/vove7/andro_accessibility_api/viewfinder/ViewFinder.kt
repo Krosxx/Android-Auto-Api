@@ -3,7 +3,9 @@ package cn.vove7.andro_accessibility_api.viewfinder
 import android.view.accessibility.AccessibilityNodeInfo
 import cn.vove7.andro_accessibility_api.AccessibilityApi
 import cn.vove7.andro_accessibility_api.utils.NeedBaseAccessibilityException
+import cn.vove7.andro_accessibility_api.utils.ViewNodeNotFoundException
 import cn.vove7.andro_accessibility_api.utils.whileWaitTime
+import cn.vove7.andro_accessibility_api.viewfinder.FinderBuilderWithOperation.Companion.WAIT_MILLIS
 import cn.vove7.andro_accessibility_api.viewnode.ViewNode
 import kotlinx.coroutines.ensureActive
 import kotlin.coroutines.CoroutineContext
@@ -20,6 +22,7 @@ interface ViewFinder<T> {
 
     suspend fun attachCoroutine(): T {
         coroutineCtx = coroutineContext
+        @Suppress("UNCHECKED_CAST")
         return this as T
     }
 
@@ -32,12 +35,7 @@ interface ViewFinder<T> {
         //最大布局递归深度；极少情况会出现布局无线循环，用来防止函数栈溢出
         var MAX_DEPTH = 50
 
-        val ROOT_NODE: ViewNode
-            get() = run {
-                val service = AccessibilityApi.baseService
-                    ?: throw NeedBaseAccessibilityException()
-                service.rootNodeOfAllWindows
-            }
+        val ROOT_NODE: ViewNode get() = ViewNode.getRoot()
 
         /**
          * 使用深度搜索
@@ -115,9 +113,14 @@ interface ViewFinder<T> {
     }
 
     //[findAll]
-    fun find(includeInvisible: Boolean = false): Array<ViewNode> {
-        return findAll(includeInvisible)
+    fun find(includeInvisible: Boolean = false) = findAll(includeInvisible)
+
+    @Throws(ViewNodeNotFoundException::class)
+    fun require(waitMillis: Long = WAIT_MILLIS): ViewNode {
+        return waitFor(waitMillis) ?: throw ViewNodeNotFoundException(this)
     }
+
+    fun exist(): Boolean = findFirst() != null
 
     /**
      *

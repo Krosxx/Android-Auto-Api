@@ -10,6 +10,7 @@ import cn.vove7.andro_accessibility_api.utils.NeedAccessibilityException
 import cn.vove7.andro_accessibility_api.utils.jumpAccessibilityServiceSettings
 import cn.vove7.andro_accessibility_api.utils.whileWaitTime
 import cn.vove7.andro_accessibility_api.viewnode.ViewNode
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.lang.Thread.sleep
@@ -117,15 +118,13 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
         if (!enableListenAppScope) return
         event ?: return
 
-        when (event.eventType) {
-            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
-                //界面切换
-                val classNameStr = event.className
-                val pkg = event.packageName as String?
-                if (!classNameStr.isNullOrBlank() && pkg != null) {
-                    GlobalScope.launch {
-                        updateCurrentApp(pkg, classNameStr.toString())
-                    }
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            //界面切换
+            val classNameStr = event.className
+            val pkg = event.packageName as String?
+            if (!classNameStr.isNullOrBlank() && pkg != null) {
+                GlobalScope.launch {
+                    updateCurrentApp(pkg, classNameStr.toString())
                 }
             }
         }

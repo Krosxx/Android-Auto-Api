@@ -30,7 +30,7 @@ class IdCondition(private val targetId: String) : MatchCondition {
     }
 }
 
-fun ConditionBuilder.id(id: String) = link(IdCondition(id))
+fun ConditionGroup.id(id: String) = link(IdCondition(id))
 
 class TextEqCondition(private val texts: Array<out String>) : MatchCondition {
     init {
@@ -42,7 +42,7 @@ class TextEqCondition(private val texts: Array<out String>) : MatchCondition {
     } ?: false
 }
 
-fun ConditionBuilder.text(vararg texts: String) = link(TextEqCondition(texts))
+fun ConditionGroup.text(vararg texts: String) = link(TextEqCondition(texts))
 
 object _id {
     operator fun rangeTo(s: String) = _desc.eq(s)
@@ -76,7 +76,7 @@ class RTextEqCondition(regex: String) : RegexCondition(regex) {
     override fun AcsNode.nodeText(): String? = text?.toString()
 }
 
-fun ConditionBuilder.matchText(reg: String) = link(RTextEqCondition(reg))
+fun ConditionGroup.matchText(reg: String) = link(RTextEqCondition(reg))
 
 class ContainTextCondition(private val texts: Array<out String>) : MatchCondition {
     init {
@@ -88,7 +88,7 @@ class ContainTextCondition(private val texts: Array<out String>) : MatchConditio
     } ?: false
 }
 
-fun ConditionBuilder.containsText(vararg texts: String) = link(ContainTextCondition(texts))
+fun ConditionGroup.containsText(vararg texts: String) = link(ContainTextCondition(texts))
 
 class SimilarityTextCondition(
     private val text: String,
@@ -99,7 +99,7 @@ class SimilarityTextCondition(
     }
 }
 
-fun ConditionBuilder.similarityText(text: String, limit: Float) =
+fun ConditionGroup.similarityText(text: String, limit: Float) =
     link(SimilarityTextCondition(text, limit))
 
 class SimilarityDescCondition(
@@ -111,7 +111,7 @@ class SimilarityDescCondition(
     }
 }
 
-fun ConditionBuilder.similarityDesc(text: String, limit: Float) =
+fun ConditionGroup.similarityDesc(text: String, limit: Float) =
     link(SimilarityDescCondition(text, limit))
 
 class DescEqCondition(private val texts: Array<out String>) : MatchCondition {
@@ -124,7 +124,7 @@ class DescEqCondition(private val texts: Array<out String>) : MatchCondition {
     }
 }
 
-fun ConditionBuilder.desc(vararg desc: String) = link(DescEqCondition(desc))
+fun ConditionGroup.desc(vararg desc: String) = link(DescEqCondition(desc))
 
 class ContainDescCondition(private val texts: Array<out String>) : MatchCondition {
     init {
@@ -136,7 +136,7 @@ class ContainDescCondition(private val texts: Array<out String>) : MatchConditio
     } ?: false
 }
 
-fun ConditionBuilder.containsDesc(vararg desc: String) = link(ContainDescCondition(desc))
+fun ConditionGroup.containsDesc(vararg desc: String) = link(ContainDescCondition(desc))
 
 class TextOrDescEqCondition(private val texts: Array<out String>) : MatchCondition {
     init {
@@ -148,7 +148,7 @@ class TextOrDescEqCondition(private val texts: Array<out String>) : MatchConditi
     }
 }
 
-fun ConditionBuilder.textOrDesc(vararg texts: String) = link(TextOrDescEqCondition(texts))
+fun ConditionGroup.textOrDesc(vararg texts: String) = link(TextOrDescEqCondition(texts))
 
 abstract class BoolCondition(private val b: Boolean) : MatchCondition {
     abstract fun AcsNode.prop(): Boolean?
@@ -160,21 +160,21 @@ class ClickableCondition(b: Boolean) : BoolCondition(b) {
 }
 
 @JvmOverloads
-fun ConditionBuilder.clickable(b: Boolean = true) = link(ClickableCondition(b))
+fun ConditionGroup.clickable(b: Boolean = true) = link(ClickableCondition(b))
 
 class CheckableCondition(b: Boolean) : BoolCondition(b) {
     override fun AcsNode.prop() = isCheckable
 }
 
 @JvmOverloads
-fun ConditionBuilder.checkable(b: Boolean = true) = link(CheckableCondition(b))
+fun ConditionGroup.checkable(b: Boolean = true) = link(CheckableCondition(b))
 
 class CheckedCondition(b: Boolean) : BoolCondition(b) {
     override fun AcsNode.prop() = isChecked
 }
 
 @JvmOverloads
-fun ConditionBuilder.checked(b: Boolean = true) = link(CheckedCondition(b))
+fun ConditionGroup.checked(b: Boolean = true) = link(CheckedCondition(b))
 
 class DismissableCondition(private val b: Boolean) : MatchCondition {
     override fun invoke(node: AcsNode) =
@@ -183,7 +183,7 @@ class DismissableCondition(private val b: Boolean) : MatchCondition {
 }
 
 @JvmOverloads
-fun ConditionBuilder.dismissable(b: Boolean = true) = link(DismissableCondition(b))
+fun ConditionGroup.dismissable(b: Boolean = true) = link(DismissableCondition(b))
 
 
 class EditableCondition(b: Boolean) : BoolCondition(b) {
@@ -194,14 +194,14 @@ class EditableCondition(b: Boolean) : BoolCondition(b) {
 }
 
 @JvmOverloads
-fun ConditionBuilder.editable(b: Boolean = true) = link(EditableCondition(b))
+fun ConditionGroup.editable(b: Boolean = true) = link(EditableCondition(b))
 
 class LongClickableCondition(b: Boolean) : BoolCondition(b) {
     override fun AcsNode.prop() = isLongClickable
 }
 
 @JvmOverloads
-fun ConditionBuilder.longClickable(b: Boolean = true) = link(LongClickableCondition(b))
+fun ConditionGroup.longClickable(b: Boolean = true) = link(LongClickableCondition(b))
 
 
 class EnabledCondition(private val b: Boolean) : MatchCondition {
@@ -209,7 +209,7 @@ class EnabledCondition(private val b: Boolean) : MatchCondition {
 }
 
 @JvmOverloads
-fun ConditionBuilder.enabled(b: Boolean = true) = link(EnabledCondition(b))
+fun ConditionGroup.enabled(b: Boolean = true) = link(EnabledCondition(b))
 
 
 class FocusableCondition(private val b: Boolean) : MatchCondition {
@@ -217,26 +217,26 @@ class FocusableCondition(private val b: Boolean) : MatchCondition {
 }
 
 @JvmOverloads
-fun ConditionBuilder.focusable(b: Boolean = true) = link(FocusableCondition(b))
+fun ConditionGroup.focusable(b: Boolean = true) = link(FocusableCondition(b))
 
 class FocusedCondition(b: Boolean = true) : BoolCondition(b) {
     override fun AcsNode.prop() = isFocused
 }
 
 @JvmOverloads
-fun ConditionBuilder.focused(b: Boolean = true) = link(FocusedCondition(b))
+fun ConditionGroup.focused(b: Boolean = true) = link(FocusedCondition(b))
 
 object HasChildCondition : MatchCondition {
     override fun invoke(node: AcsNode) = node.childCount > 0
 }
 
-fun ConditionBuilder.hasChild() = link(HasChildCondition)
+fun ConditionGroup.hasChild() = link(HasChildCondition)
 
 object NoChildCondition : MatchCondition {
     override fun invoke(node: AcsNode) = node.childCount == 0
 }
 
-fun ConditionBuilder.noChild() = link(NoChildCondition)
+fun ConditionGroup.noChild() = link(NoChildCondition)
 
 class ClassNameCondition(private val clses: Array<out String>) : MatchCondition {
     init {
@@ -249,14 +249,14 @@ class ClassNameCondition(private val clses: Array<out String>) : MatchCondition 
     }
 }
 
-fun ConditionBuilder.type(vararg types: String) = link(ClassNameCondition(types))
+fun ConditionGroup.type(vararg types: String) = link(ClassNameCondition(types))
 
 class ScrollableCondition(b: Boolean) : BoolCondition(b) {
     override fun AcsNode.prop() = isScrollable
 }
 
 @JvmOverloads
-fun ConditionBuilder.scrollable(b: Boolean = true) = link(ScrollableCondition(b))
+fun ConditionGroup.scrollable(b: Boolean = true) = link(ScrollableCondition(b))
 
 
 class SelectedCondition(b: Boolean) : BoolCondition(b) {
@@ -264,7 +264,7 @@ class SelectedCondition(b: Boolean) : BoolCondition(b) {
 }
 
 @JvmOverloads
-fun ConditionBuilder.selected(b: Boolean = true) = link(SelectedCondition(b))
+fun ConditionGroup.selected(b: Boolean = true) = link(SelectedCondition(b))
 
 //
 //class CCondition(private val b: Boolean) : MatchCondition {

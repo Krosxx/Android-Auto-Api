@@ -3,6 +3,7 @@ package cn.vove7.andro_accessibility_api.utils
 import android.content.Context
 import android.graphics.Point
 import android.graphics.RectF
+import android.os.Build
 import android.util.DisplayMetrics
 import android.util.Pair
 import android.view.WindowManager
@@ -15,21 +16,36 @@ import cn.vove7.andro_accessibility_api.InitCp
  * 2018/9/6
  */
 object ScreenAdapter {
-    private var deviceHeight = 1920
-    private var deviceWidth = 1080
+    private val deviceHeight: Int
+    private val deviceWidth: Int
 
     init {
-        val m = DisplayMetrics()
-        (InitCp.AppIns.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
-            .defaultDisplay.getRealMetrics(m)
-        deviceHeight = m.heightPixels
-        deviceWidth = m.widthPixels
+        val display = (InitCp.AppIns.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
+            .defaultDisplay
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 -> {
+                val m = DisplayMetrics()
+                display.getRealMetrics(m)
+                deviceHeight = m.heightPixels
+                deviceWidth = m.widthPixels
+            }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 -> {
+                val size = Point(0, 0)
+                display.getRealSize(size)
+                deviceWidth = size.x
+                deviceHeight = size.y
+            }
+            else -> {
+                @Suppress("DEPRECATION")
+                deviceWidth = display.width
+                @Suppress("DEPRECATION")
+                deviceHeight = display.height
+            }
+        }
     }
 
-    var relHeight =
-        deviceHeight
-    var relWidth =
-        deviceWidth
+    var relHeight = deviceHeight
+    var relWidth = deviceWidth
 
     fun setScreenSize(width: Int, height: Int) {
         relHeight = height
@@ -43,13 +59,10 @@ object ScreenAdapter {
         )
     }
 
-    fun reSet() {
-        relHeight =
-            deviceHeight
-        relWidth =
-            deviceWidth
+    fun reset() {
+        relHeight = deviceHeight
+        relWidth = deviceWidth
     }
-
 
     fun scalePoints(points: Array<Pair<Int, Int>>): Array<Pair<Float, Float>> {
 

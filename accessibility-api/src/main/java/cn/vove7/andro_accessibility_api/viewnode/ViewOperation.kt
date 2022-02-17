@@ -10,6 +10,11 @@ import cn.vove7.andro_accessibility_api.viewfinder.ViewFindBuilder
  */
 interface ViewOperation {
     val id: String?
+    val className: String?
+
+    val simpleName: String?
+        get() = className?.let { it.substring(it.lastIndexOf('.') + 1) }
+
 
     /**
      * 尝试点击
@@ -61,6 +66,8 @@ interface ViewOperation {
      * @return Boolean
      */
     fun globalClick(): Boolean
+
+    fun globalLongClick(): Boolean
 
     /**
      * 以此Node中心滑动到dx,dy的地方

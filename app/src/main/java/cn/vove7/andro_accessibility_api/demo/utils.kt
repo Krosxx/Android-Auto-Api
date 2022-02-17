@@ -15,6 +15,7 @@ import kotlin.coroutines.EmptyCoroutineContext
  */
 
 
+@DelicateCoroutinesApi
 fun launchWithExpHandler(
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
@@ -33,7 +34,7 @@ val mainHandler by lazy {
     Handler(Looper.getMainLooper())
 }
 
-inline fun runOnUi(noinline block: () -> Unit) {
+fun runOnUi(block: () -> Unit) {
     if (Looper.getMainLooper() == Looper.myLooper()) {
         block()
     } else {
