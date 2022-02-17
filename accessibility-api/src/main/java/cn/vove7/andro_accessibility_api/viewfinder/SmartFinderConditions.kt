@@ -4,6 +4,7 @@ package cn.vove7.andro_accessibility_api.viewfinder
 
 import android.os.Build
 import android.view.accessibility.AccessibilityNodeInfo
+import androidx.annotation.RequiresApi
 import cn.vove7.andro_accessibility_api.utils.compareSimilarity
 
 /**
@@ -176,23 +177,22 @@ class CheckedCondition(b: Boolean) : BoolCondition(b) {
 @JvmOverloads
 fun ConditionGroup.checked(b: Boolean = true) = link(CheckedCondition(b))
 
+@RequiresApi(Build.VERSION_CODES.KITKAT)
 class DismissableCondition(private val b: Boolean) : MatchCondition {
-    override fun invoke(node: AcsNode) =
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
-                && node.isDismissable == b
+    override fun invoke(node: AcsNode) = node.isDismissable == b
 }
 
+@RequiresApi(Build.VERSION_CODES.KITKAT)
 @JvmOverloads
 fun ConditionGroup.dismissable(b: Boolean = true) = link(DismissableCondition(b))
 
 
+@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 class EditableCondition(b: Boolean) : BoolCondition(b) {
-    override fun AcsNode.prop(): Boolean? {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) return null
-        return isEditable
-    }
+    override fun AcsNode.prop(): Boolean = isEditable
 }
 
+@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 @JvmOverloads
 fun ConditionGroup.editable(b: Boolean = true) = link(EditableCondition(b))
 
