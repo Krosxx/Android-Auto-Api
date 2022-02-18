@@ -12,6 +12,10 @@ import cn.vove7.andro_accessibility_api.viewnode.ViewNode
  *
  * 2018/8/5
  */
+@Deprecated(
+    "use SmartFinder",
+    ReplaceWith("SF", "cn.vove7.andro_accessibility_api.viewfinder.*")
+)
 class ViewFindBuilder(
     node: ViewNode? = null
 ) : ViewFinderWithMultiCondition(node),

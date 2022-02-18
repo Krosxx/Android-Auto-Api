@@ -51,12 +51,12 @@ interface ConditionGroup : Condition, ViewFinder<ConditionGroup>, FinderBuilderW
             and(cond)
         } else or(cond)
 
-    fun and(cond: MatchCondition): ConditionGroup {
+    infix fun and(cond: MatchCondition): ConditionGroup {
         this.conditions.add(ConditionNode(ConditionType.AND, cond))
         return this
     }
 
-    fun or(cond: MatchCondition): ConditionGroup {
+    infix fun or(cond: MatchCondition): ConditionGroup {
         this.conditions.add(ConditionNode(ConditionType.OR, cond))
         return this
     }
@@ -72,13 +72,13 @@ interface ConditionGroup : Condition, ViewFinder<ConditionGroup>, FinderBuilderW
         return this
     }
 
-    fun and(group: ConditionGroup): ConditionGroup {
+    infix fun and(group: ConditionGroup): ConditionGroup {
         group.type = ConditionType.AND
         conditions.add(group)
         return this
     }
 
-    fun or(group: ConditionGroup): ConditionGroup {
+    infix fun or(group: ConditionGroup): ConditionGroup {
         group.type = ConditionType.OR
         conditions.add(group)
         return this
@@ -106,8 +106,8 @@ interface ConditionGroup : Condition, ViewFinder<ConditionGroup>, FinderBuilderW
         return true
     }
 
-    fun where(cond: MatchCondition): ConditionGroup = and(cond)
-    fun where(group: ConditionGroup): ConditionGroup = and(group)
+    infix fun where(cond: MatchCondition): ConditionGroup = and(cond)
+    infix fun where(group: ConditionGroup): ConditionGroup = and(group)
 }
 
 fun SG(vararg conditions: MatchCondition) = SF.apply {
@@ -135,4 +135,5 @@ class SmartFinder(
 
     override val conditions = mutableListOf<Condition>()
 
+    operator fun invoke() = this
 }

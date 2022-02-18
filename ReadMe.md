@@ -218,6 +218,12 @@ SF.where(SF.text("111").desc("111"))
             .find()
 ```
 
+中缀表达式
+```kotlin
+//使用中缀表达式
+(SF where text("1111") or text("2222")
+        and id("111") or longClickable()).findAll()
+```
 
 
 3. 协程支持

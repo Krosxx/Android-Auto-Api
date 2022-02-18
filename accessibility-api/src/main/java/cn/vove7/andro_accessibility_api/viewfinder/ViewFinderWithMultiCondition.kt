@@ -12,6 +12,10 @@ import kotlin.coroutines.CoroutineContext
  * @author 17719
  * 2018/8/5
  */
+@Deprecated(
+    "use SmartFinder",
+    ReplaceWith("SF", "cn.vove7.andro_accessibility_api.viewfinder.*")
+)
 open class ViewFinderWithMultiCondition(
     override val node: ViewNode? = null
 ) : ViewFinder<ViewFinderWithMultiCondition> {

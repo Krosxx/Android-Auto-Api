@@ -182,7 +182,7 @@ class TextMatchAction : Action() {
         requireBaseAccessibility(true)
         val s = buildString {
             appendLine("containsText(\"基础\").find()")
-            appendLine(containsText("基础").find().map { it.text })
+            appendLine(SF.containsText("基础").find().map { it.text })
             appendLine()
             appendLine("matchesText(\"[a-zA-Z]+\").find()")
             appendLine(matchesText("[a-zA-Z]+").find().map { it.text })
@@ -248,7 +248,7 @@ class ClickTextAction : Action() {
             }
             return
         }
-        val node = containsText(targetText).type("textview")
+        val node = SF.containsText(targetText).type("textview")
         val t = node.findFirst()
         toast("haveFound: $t")
         delay(1000)
@@ -303,6 +303,10 @@ class SmartFinderAction : Action() {
 
         val s = SF.findByDepths(1, 0, 0)
         sb.appendLine(s?.toString())
+
+        (SF where text("1111") or text("2222")
+                and id("111") or longClickable()).findAll()
+
 
         SF.where {
             it.isChecked

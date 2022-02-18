@@ -16,10 +16,13 @@ import kotlin.coroutines.coroutineContext
  * @param node 开始节点
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
-interface ViewFinder<T> {
+interface ViewFinder<T : ViewFinder<T>> {
     val node: ViewNode?
     var coroutineCtx: CoroutineContext?
 
+    /**
+     * 协程支持
+     */
     suspend fun attachCoroutine(): T {
         coroutineCtx = coroutineContext
         @Suppress("UNCHECKED_CAST")
