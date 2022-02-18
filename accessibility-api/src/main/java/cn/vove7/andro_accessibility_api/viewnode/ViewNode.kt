@@ -12,7 +12,7 @@ import cn.vove7.andro_accessibility_api.AccessibilityApi
 import cn.vove7.andro_accessibility_api.api.requireBaseAccessibility
 import cn.vove7.andro_accessibility_api.api.swipe
 import cn.vove7.andro_accessibility_api.utils.ScreenAdapter
-import cn.vove7.andro_accessibility_api.viewfinder.ViewFindBuilder
+import cn.vove7.andro_accessibility_api.viewfinder.SmartFinder
 import java.lang.Thread.sleep
 
 /**
@@ -355,11 +355,9 @@ class ViewNode(
 
     /**
      * 从该节点搜索
-     * @return ViewFindBuilder
+     * @return SmartFinder
      */
-    override fun finder(): ViewFindBuilder {
-        return ViewFindBuilder(this)
-    }
+    override fun finder() = SmartFinder(this)
 
     override var isVisibleToUser: Boolean
         get() {

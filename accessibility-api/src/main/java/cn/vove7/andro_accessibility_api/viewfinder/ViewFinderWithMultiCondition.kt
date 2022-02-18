@@ -17,9 +17,8 @@ import kotlin.coroutines.CoroutineContext
     ReplaceWith("SF", "cn.vove7.andro_accessibility_api.viewfinder.*")
 )
 open class ViewFinderWithMultiCondition(
-    override val node: ViewNode? = null
-) : ViewFinder<ViewFinderWithMultiCondition> {
-    override var coroutineCtx: CoroutineContext? = null
+    node: ViewNode? = null
+) : ViewFinder<ViewFinderWithMultiCondition>(node) {
 
     private var viewTextCondition: MutableList<String> = mutableListOf()
 

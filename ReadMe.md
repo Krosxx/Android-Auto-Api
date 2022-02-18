@@ -157,7 +157,7 @@ editor().require().apply { // this is ViewNode
 </details>
 
 
-2. 提供自定义搜索条件 `CustomViewFinder`
+2. 提供自定义搜索条件
 
 搜索所有可点击的视图：
 

@@ -2,7 +2,6 @@ package cn.vove7.andro_accessibility_api.viewfinder
 
 import android.view.accessibility.AccessibilityNodeInfo
 import cn.vove7.andro_accessibility_api.viewnode.ViewNode
-import kotlin.coroutines.CoroutineContext
 
 /**
  * # SmartFinder
@@ -30,10 +29,14 @@ class ConditionNode(
     override fun check(node: AccessibilityNodeInfo) = condition(node)
 }
 
-interface ConditionGroup : Condition, ViewFinder<ConditionGroup>, FinderBuilderWithOperation {
+abstract class ConditionGroup(
+    node: ViewNode? = null
+) : ViewFinder<ConditionGroup>(node), Condition, FinderBuilderWithOperation {
 
-    val conditions: MutableList<Condition>
-    var lastType: ConditionType
+    override var type: ConditionType = ConditionType.AND
+    private val conditions: MutableList<Condition> = mutableListOf()
+    private var lastType: ConditionType = ConditionType.AND
+    override val finder: ViewFinder<*> get() = this
 
     fun and(vararg conditions: MatchCondition): ConditionGroup {
         if (conditions.isEmpty()) {
@@ -121,19 +124,8 @@ fun SG(group: ConditionGroup) = SF.apply {
 val SF get() = SmartFinder()
 
 class SmartFinder(
-    override val node: ViewNode? = null
-) : ConditionGroup {
-    override var coroutineCtx: CoroutineContext? = null
-
-    override var lastType: ConditionType = ConditionType.AND
-
-    override var finder: ViewFinder<*> = this
-
+    node: ViewNode? = null
+) : ConditionGroup(node) {
+    operator fun invoke(vararg conditions: MatchCondition) = and(*conditions)
     override fun findCondition(node: AccessibilityNodeInfo) = check(node)
-
-    override var type: ConditionType = ConditionType.AND
-
-    override val conditions = mutableListOf<Condition>()
-
-    operator fun invoke() = this
 }

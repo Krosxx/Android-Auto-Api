@@ -3,6 +3,7 @@ package cn.vove7.andro_accessibility_api.viewnode
 import android.graphics.Point
 import android.graphics.Rect
 import android.view.accessibility.AccessibilityNodeInfo
+import cn.vove7.andro_accessibility_api.viewfinder.SmartFinder
 import cn.vove7.andro_accessibility_api.viewfinder.ViewFindBuilder
 
 /**
@@ -159,7 +160,7 @@ interface ViewOperation {
 
     var isVisibleToUser: Boolean
 
-    fun finder(): ViewFindBuilder
+    fun finder(): SmartFinder
 
     fun refresh(): Boolean
 

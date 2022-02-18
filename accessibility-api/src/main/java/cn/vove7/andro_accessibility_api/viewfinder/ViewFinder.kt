@@ -16,9 +16,10 @@ import kotlin.coroutines.coroutineContext
  * @param node 开始节点
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
-interface ViewFinder<T : ViewFinder<T>> {
-    val node: ViewNode?
-    var coroutineCtx: CoroutineContext?
+abstract class ViewFinder<T : ViewFinder<T>>(
+    val node: ViewNode? = null
+) {
+    private var coroutineCtx: CoroutineContext? = null
 
     /**
      * 协程支持
@@ -206,6 +207,6 @@ interface ViewFinder<T : ViewFinder<T>> {
     /**
      * 查找条件
      */
-    fun findCondition(node: AccessibilityNodeInfo): Boolean
+    abstract fun findCondition(node: AccessibilityNodeInfo): Boolean
 
 }

@@ -17,7 +17,7 @@ interface FinderBuilderWithOperation : ViewOperation {
         var WAIT_MILLIS = 2000L
     }
 
-    var finder: ViewFinder<*>
+    val finder: ViewFinder<*>
 
     private val node get() = finder.require()
 

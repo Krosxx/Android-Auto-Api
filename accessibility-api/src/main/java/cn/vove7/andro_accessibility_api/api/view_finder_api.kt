@@ -154,26 +154,26 @@ fun findWith(
     includeInvisible: Boolean = false,
     predicate: (AccessibilityNodeInfo) -> Boolean
 ): ViewNode? {
-    return CustomViewFinder(predicate = predicate).findFirst(includeInvisible)
+    return SF.where(predicate).findFirst(includeInvisible)
 }
 
 fun findAllWith(
     includeInvisible: Boolean = false,
     predicate: (AccessibilityNodeInfo) -> Boolean
 ): Array<ViewNode> {
-    return CustomViewFinder(predicate = predicate).findAll(includeInvisible)
+    return SF.where(predicate).findAll(includeInvisible)
 }
 
 fun ViewNode.findWith(
     includeInvisible: Boolean = false,
     predicate: (AccessibilityNodeInfo) -> Boolean
 ): ViewNode? {
-    return CustomViewFinder(this, predicate).findFirst(includeInvisible)
+    return SmartFinder(this).where(predicate).findFirst(includeInvisible)
 }
 
 fun ViewNode.findAllWith(
     includeInvisible: Boolean = false,
     predicate: (AccessibilityNodeInfo) -> Boolean
 ): Array<ViewNode> {
-    return CustomViewFinder(this, predicate = predicate).findAll(includeInvisible)
+    return SmartFinder(this).where(predicate).findAll(includeInvisible)
 }

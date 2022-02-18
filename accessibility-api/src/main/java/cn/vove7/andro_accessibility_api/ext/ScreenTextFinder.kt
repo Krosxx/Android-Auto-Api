@@ -3,7 +3,6 @@ package cn.vove7.andro_accessibility_api.ext
 import android.view.accessibility.AccessibilityNodeInfo
 import cn.vove7.andro_accessibility_api.viewfinder.ViewFinder
 import cn.vove7.andro_accessibility_api.viewnode.ViewNode
-import kotlin.coroutines.CoroutineContext
 
 /**
  * # ScreenTextFinder
@@ -12,11 +11,10 @@ import kotlin.coroutines.CoroutineContext
  * 2018/10/14
  */
 class ScreenTextFinder(
-    override val node: ViewNode? = null
-) : ViewFinder<ScreenTextFinder> {
+    node: ViewNode? = null
+) : ViewFinder<ScreenTextFinder>(node) {
 
     var isWeb = false
-    override var coroutineCtx: CoroutineContext? = null
 
     override fun findCondition(node: AccessibilityNodeInfo): Boolean {
         if (node.className?.endsWith("WebView", ignoreCase = true) == true) {
