@@ -7,7 +7,7 @@ package cn.vove7.andro_accessibility_api
  * @property pageName String  class name of Activity or Dialog
  * @constructor
  */
-data class AppScope(
+class AppScope(
     var packageName: String,
     var pageName: String
 ) {
@@ -15,6 +15,7 @@ data class AppScope(
         if (other == null || other !is AppScope) return false
 
         return packageName.startsWith(other.packageName) &&
+                pageName == other.pageName ||
                 pageName.isEmpty() || other.pageName.isEmpty() ||
                 pageName.endsWith("." + other.pageName) ||
                 pageName.endsWith("$" + other.pageName) ||
