@@ -166,4 +166,6 @@ interface ViewOperation {
 
     val actionList: List<AccessibilityNodeInfo.AccessibilityAction>
 
+    fun sendImeAction(): Boolean
+
 }

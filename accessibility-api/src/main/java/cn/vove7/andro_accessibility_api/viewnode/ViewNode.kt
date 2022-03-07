@@ -220,20 +220,14 @@ class ViewNode(
         return node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD.id)
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun scrollLeft(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_LEFT.id)
-        } else {
-            false
-        }
+        return node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_LEFT.id)
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun scrollRight(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_RIGHT.id)
-        } else {
-            false
-        }
+        return node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_RIGHT.id)
     }
 
     override var text: CharSequence?
@@ -249,11 +243,8 @@ class ViewNode(
         }
 
     override var hintText: CharSequence?
-        get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            node.hintText
-        } else {
-            null
-        }
+        @RequiresApi(Build.VERSION_CODES.O)
+        get() = node.hintText
         @RequiresApi(Build.VERSION_CODES.O)
         set(value) {
             node.hintText = value
@@ -336,21 +327,21 @@ class ViewNode(
             null
         }
         val desc = node.contentDescription
-
-        return "{ class: " + className +
-                (if (id == null) "" else ", id: " + id.substring(id.lastIndexOf('/') + 1)) +
-                (if (node.text == null) "" else ", text: ${node.text}") +
-                (if (hintText == null) "" else ", hintText: $hintText") +
-                (if (desc == null) "" else ", desc: $desc") +
-                (", bounds: $bounds" + ", childCount: ${getChildCount()}") +
-                (if (node.isClickable) ", Clickable" else "") +
-                (if (node.isSelected) ", Selected" else "") +
-                (if (!node.isVisibleToUser) ", InVisibleToUser" else "") +
-                (if (!node.isEnabled) ", Disabled" else "") +
-                (if (node.isPassword) ", Password" else "") +
-                (if (node.isChecked) ", Checked" else "") +
-                (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && node.isDismissable) ", Dismissable" else "") +
-                " }"
+        return buildString {
+            append("{ class: ").append(className)
+            if (id != null) append(", id: ").append(id.substring(id.lastIndexOf('/') + 1))
+            if (node.text != null) append(", text: ${node.text}")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && hintText == null) append(", hintText: $hintText")
+            if (desc != null) append(", desc: $desc")
+            append(", bounds: $bounds" + ", childCount: ${getChildCount()}")
+            if (node.isClickable) append(", Clickable")
+            if (node.isSelected) append(", Selected")
+            if (!node.isVisibleToUser) append(", InVisibleToUser")
+            if (!node.isEnabled) append(", Disabled")
+            if (node.isPassword) append(", Password")
+            if (node.isChecked) append(", Checked")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && node.isDismissable) append(", Dismissable")
+        }
     }
 
     /**
@@ -387,4 +378,9 @@ class ViewNode(
     override val actionList: List<AccessibilityNodeInfo.AccessibilityAction>
         @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
         get() = node.actionList
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    override fun sendImeAction(): Boolean {
+        return node.performAction(android.R.id.accessibilityActionImeEnter)
+    }
 }

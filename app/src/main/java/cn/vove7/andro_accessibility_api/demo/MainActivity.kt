@@ -1,6 +1,7 @@
 package cn.vove7.andro_accessibility_api.demo
 
 import android.app.Activity
+import android.os.Build
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.ListView
@@ -13,7 +14,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val actions = listOf(
+        val actions = mutableListOf(
             BaseNavigatorAction(),
             PickScreenText(),
             DrawableAction(),
@@ -30,6 +31,9 @@ class MainActivity : AppCompatActivity() {
                 override suspend fun run(act: Activity) {}
             }
         )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            actions.add(SendImeAction())
+        }
 
         val lv = findViewById<ListView>(R.id.list_view)
 

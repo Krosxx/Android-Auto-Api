@@ -7,6 +7,7 @@ import android.graphics.RectF
 import android.os.Build
 import android.util.Log
 import android.util.Pair
+import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
@@ -355,5 +356,34 @@ class CoroutineStopAction : Action() {
         }
         delay(3000)
         job.cancel()
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.R)
+class SendImeAction : Action() {
+    override val name: String
+        get() = "SendImeAction"
+
+    override suspend fun run(act: Activity) {
+        requireBaseAccessibility(true)
+        withContext(Dispatchers.Main) {
+            val et = EditText(act)
+            et.imeOptions = EditorInfo.IME_ACTION_SEARCH
+            et.id = android.R.id.text1
+
+            val dialog = AlertDialog.Builder(act).setView(et).show()
+
+            et.setOnEditorActionListener { _, _, _ ->
+                toast("Search call Success")
+                dialog.dismiss()
+                true
+            }
+        }
+        delay(800)
+        SF.type("EditText").require(2000).apply {
+            tryClick()
+            delay(300)
+            sendImeAction()
+        }
     }
 }

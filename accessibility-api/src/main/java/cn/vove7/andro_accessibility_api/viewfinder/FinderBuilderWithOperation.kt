@@ -45,6 +45,7 @@ interface FinderBuilderWithOperation : ViewOperation {
     override fun select() = node.select()
 
     override var hintText: CharSequence?
+        @RequiresApi(Build.VERSION_CODES.O)
         get() = node.hintText
         @RequiresApi(Build.VERSION_CODES.O)
         set(value) {
@@ -89,11 +90,13 @@ interface FinderBuilderWithOperation : ViewOperation {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun scrollBackward() = node.scrollBackward()
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun scrollLeft() = node.scrollLeft()
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun swipe(dx: Int, dy: Int, delay: Int) = node.swipe(dx, dy, delay)
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun scrollRight() = node.scrollRight()
 
     override val children get() = node.children
@@ -127,4 +130,6 @@ interface FinderBuilderWithOperation : ViewOperation {
         @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
         get() = node.actionList
 
+    @RequiresApi(Build.VERSION_CODES.R)
+    override fun sendImeAction() = node.sendImeAction()
 }
