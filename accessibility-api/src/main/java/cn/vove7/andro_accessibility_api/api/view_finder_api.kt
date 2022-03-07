@@ -1,7 +1,11 @@
+@file:Suppress("unused")
+
 package cn.vove7.andro_accessibility_api.api
 
+import android.os.Build
 import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
+import androidx.annotation.RequiresApi
 import cn.vove7.andro_accessibility_api.AccessibilityApi
 import cn.vove7.andro_accessibility_api.utils.times
 import cn.vove7.andro_accessibility_api.viewfinder.*
@@ -41,10 +45,8 @@ fun waitAccessibility(waitMillis: Long = 30000, cls: Class<*>): Boolean {
  * @param id String
  * @return ViewFindBuilder
  */
-fun withId(id: String): ViewFindBuilder {
-    return ViewFindBuilder().apply {
-        id(id)
-    }
+fun withId(id: String): ConditionGroup {
+    return SF.id(id)
 }
 
 /**
@@ -52,10 +54,8 @@ fun withId(id: String): ViewFindBuilder {
  * @param text Array<out String>
  * @return ViewFindBuilder
  */
-fun withText(vararg text: String): ViewFindBuilder {
-    return ViewFindBuilder().apply {
-        equalsText(*text)
-    }
+fun withText(vararg text: String): ConditionGroup {
+    return SF.text(*text)
 }
 
 /**
@@ -67,10 +67,8 @@ fun withText(vararg text: String): ViewFindBuilder {
  * @param types Array<out String>
  * @return ViewFindBuilder
  */
-fun withType(vararg types: String): ViewFindBuilder {
-    return ViewFindBuilder().apply {
-        this.type(*types)
-    }
+fun withType(vararg types: String): ConditionGroup {
+    return SF.type(*types)
 }
 
 /**
@@ -78,16 +76,13 @@ fun withType(vararg types: String): ViewFindBuilder {
  * @param desc Array<out String>
  * @return ViewFindBuilder
  */
-fun withDesc(vararg desc: String): ViewFindBuilder {
-    return ViewFindBuilder().apply {
-        this.desc(*desc)
-    }
+fun withDesc(vararg desc: String): ConditionGroup {
+    return SF.desc(*desc)
 }
 
-fun editor(): ViewFindBuilder {
-    return ViewFindBuilder().apply {
-        this.editable(true)
-    }
+@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+fun editor(): ConditionGroup {
+    return SF.editable(true)
 }
 
 /**
@@ -104,27 +99,22 @@ fun withDepths(vararg depths: Int): ViewNode? {
  * @param text String
  * @return ViewFindBuilder
  */
-fun containsText(vararg text: String): ViewFindBuilder {
-    return ViewFindBuilder().apply {
-        containsText(*text)
-    }
+fun containsText(vararg text: String): ConditionGroup {
+    return SF.containsText(*text)
 }
 
 
 /**
  * 正则匹配
- * @param regs Array<out String>
+ * @param reg Array<out String>
  * @return ViewFindBuilder
  */
-fun matchesText(vararg regs: String): ViewFindBuilder {
-    return ViewFindBuilder().apply {
-        matchesText(*regs)
-    }
+fun matchesText(reg: String): ConditionGroup {
+    return SF.matchText(reg)
 }
 
 /**
  * 输出布局
- * @param out PrintStream
  */
 fun printLayoutInfo(includeInvisible: Boolean = true) {
     requireBaseAccessibility()

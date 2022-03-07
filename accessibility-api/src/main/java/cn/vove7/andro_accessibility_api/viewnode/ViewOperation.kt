@@ -4,7 +4,6 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.view.accessibility.AccessibilityNodeInfo
 import cn.vove7.andro_accessibility_api.viewfinder.SmartFinder
-import cn.vove7.andro_accessibility_api.viewfinder.ViewFindBuilder
 
 /**
  * ViewNode 操作方法集合
