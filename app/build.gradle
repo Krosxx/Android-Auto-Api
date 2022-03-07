@@ -11,7 +11,6 @@ android {
         }
     }
     compileSdkVersion 31
-    buildToolsVersion "29.0.3"
 
     defaultConfig {
         applicationId "cn.vove7.andro_accessibility_api.demo"
