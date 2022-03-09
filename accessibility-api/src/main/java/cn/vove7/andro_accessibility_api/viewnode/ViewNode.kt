@@ -44,7 +44,7 @@ class ViewNode(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 requireBaseAccessibility()
                 AccessibilityApi.baseService!!.windows?.mapNotNull {
-                    it.root?.let { r -> ViewNode(r) }
+                    it.root?.let { r -> r.refresh();ViewNode(r) }
                 } ?: emptyList()
             } else {
                 requireBaseAccessibility()
