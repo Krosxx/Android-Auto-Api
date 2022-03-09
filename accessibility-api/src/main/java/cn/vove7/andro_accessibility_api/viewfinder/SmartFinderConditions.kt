@@ -40,7 +40,7 @@ class TextEqCondition(private val texts: Array<out String>) : MatchCondition {
     }
 
     override fun invoke(node: AcsNode) = node.text?.toString()?.let {
-        texts.any { t -> t == it }
+        texts.any { t -> t.equals(it, ignoreCase = true) }
     } ?: false
 }
 
@@ -88,7 +88,7 @@ class ContainTextCondition(private val texts: Array<out String>) : MatchConditio
     }
 
     override fun invoke(node: AcsNode) = node.text?.toString()?.let {
-        texts.any { t -> it.contains(t) }
+        texts.any { t -> it.contains(t, ignoreCase = true) }
     } ?: false
 }
 
@@ -128,7 +128,7 @@ class DescEqCondition(private val texts: Array<out String>) : MatchCondition {
     }
 
     override fun invoke(node: AcsNode) = texts.any {
-        return node.contentDescription?.toString() == it
+        return it.equals(node.contentDescription?.toString(), ignoreCase = true)
     }
 }
 
@@ -141,7 +141,7 @@ class ContainDescCondition(private val texts: Array<out String>) : MatchConditio
     }
 
     override fun invoke(node: AcsNode) = node.contentDescription?.toString()?.let {
-        texts.any { t -> it.contains(t) }
+        texts.any { t -> `it`.contains(t) }
     } ?: false
 }
 
