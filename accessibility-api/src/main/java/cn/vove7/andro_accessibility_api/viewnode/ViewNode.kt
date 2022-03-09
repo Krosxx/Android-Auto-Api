@@ -42,13 +42,11 @@ class ViewNode(
 
         private fun rootNodesOfAllWindows() =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                requireBaseAccessibility()
-                AccessibilityApi.baseService!!.windows?.mapNotNull {
-                    it.root?.let { r -> r.refresh();ViewNode(r) }
+                AccessibilityApi.requireBase.windows?.mapNotNull {
+                    it.root?.let { r -> ViewNode(r.also(AccessibilityNodeInfo::refresh)) }
                 } ?: emptyList()
             } else {
-                requireBaseAccessibility()
-                AccessibilityApi.baseService!!.activeWinNode?.let { listOf(it) } ?: emptyList()
+                AccessibilityApi.requireBase.activeWinNode?.let { listOf(it) } ?: emptyList()
             }
 
         /**
@@ -59,8 +57,13 @@ class ViewNode(
         }
 
         fun activeWinNode(): ViewNode? {
-            requireBaseAccessibility()
-            return AccessibilityApi.baseService!!.rootInActiveWindow?.let { ViewNode(it) }
+            return AccessibilityApi.requireBase.rootInActiveWindow?.let {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                    ViewNode(it.also(AccessibilityNodeInfo::refresh))
+                } else {
+                    ViewNode(it)
+                }
+            }
         }
 
         fun withChildren(cs: List<ViewNode>): ViewNode {
@@ -93,7 +96,7 @@ class ViewNode(
         }
 
     override val parent: ViewNode?
-        get() = node.parent?.let { ViewNode(it) }
+        get() = if(buildWithChildren) null else node.parent?.let { ViewNode(it) }
 
     override fun tryClick(): Boolean {
         return tryOp(AccessibilityNodeInfo.ACTION_CLICK)

@@ -117,8 +117,7 @@ fun matchesText(reg: String): ConditionGroup {
  * 输出布局
  */
 fun printLayoutInfo(includeInvisible: Boolean = true) {
-    requireBaseAccessibility()
-    AccessibilityApi.baseService!!.rootNodeOfAllWindows.printWithChild(0, 0, includeInvisible)
+    AccessibilityApi.requireBase.rootNodeOfAllWindows.printWithChild(0, 0, includeInvisible)
 }
 
 private fun ViewNode.printWithChild(

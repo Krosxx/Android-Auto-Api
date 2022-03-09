@@ -22,7 +22,7 @@ import cn.vove7.andro_accessibility_api.utils.ScreenAdapter
 private val gestureService: AccessibilityService
     get() = if (AccessibilityApi.isGestureServiceEnable
         && Build.VERSION.SDK_INT > Build.VERSION_CODES.N
-    ) AccessibilityApi.gestureService!!
+    ) AccessibilityApi.requireGesture
     else throw NeedAccessibilityException("高级无障碍服务未开启 或 系统低于 Android N")
 
 /**

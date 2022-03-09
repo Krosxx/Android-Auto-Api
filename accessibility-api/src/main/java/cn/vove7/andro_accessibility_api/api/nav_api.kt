@@ -15,27 +15,27 @@ import kotlin.math.min
  * @author Vove
  */
 
-fun back(): Boolean = AccessibilityApi.baseService?.back() ?: false
+fun back(): Boolean = AccessibilityApi.requireBase.back()
 
-fun home(): Boolean = AccessibilityApi.baseService?.home() ?: false
+fun home(): Boolean = AccessibilityApi.requireBase.home()
 
-fun powerDialog(): Boolean = AccessibilityApi.baseService?.powerDialog() ?: false
+fun powerDialog(): Boolean = AccessibilityApi.requireBase.powerDialog()
 
 fun pullNotificationBar(): Boolean =
-    AccessibilityApi.baseService?.notificationBar() ?: false
+    AccessibilityApi.requireBase.notificationBar()
 
-fun quickSettings(): Boolean = AccessibilityApi.baseService?.quickSettings() ?: false
+fun quickSettings(): Boolean = AccessibilityApi.requireBase.quickSettings()
 
-fun recents(): Boolean = AccessibilityApi.baseService?.recents() ?: false
-
-@RequiresApi(Build.VERSION_CODES.P)
-fun lockScreen(): Boolean = AccessibilityApi.baseService?.lockScreen() ?: false
+fun recents(): Boolean = AccessibilityApi.requireBase.recents()
 
 @RequiresApi(Build.VERSION_CODES.P)
-fun screenShot(): Boolean = AccessibilityApi.baseService?.screenShot() ?: false
+fun lockScreen(): Boolean = AccessibilityApi.requireBase.lockScreen()
+
+@RequiresApi(Build.VERSION_CODES.P)
+fun screenShot(): Boolean = AccessibilityApi.requireBase.screenShot()
 
 @RequiresApi(Build.VERSION_CODES.N)
-fun splitScreen(): Boolean = AccessibilityApi.baseService?.splitScreen() ?: false
+fun splitScreen(): Boolean = AccessibilityApi.requireBase.splitScreen()
 
 fun waitForApp(pkg: String, waitTime: Long = 30000): Boolean {
     if (!AccessibilityApi.isBaseServiceEnable) {

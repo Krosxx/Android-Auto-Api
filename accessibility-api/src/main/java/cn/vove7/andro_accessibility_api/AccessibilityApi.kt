@@ -10,7 +10,6 @@ import cn.vove7.andro_accessibility_api.utils.NeedAccessibilityException
 import cn.vove7.andro_accessibility_api.utils.jumpAccessibilityServiceSettings
 import cn.vove7.andro_accessibility_api.utils.whileWaitTime
 import cn.vove7.andro_accessibility_api.viewnode.ViewNode
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.lang.Thread.sleep
@@ -143,12 +142,24 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
         @SuppressLint("StaticFieldLeak")
         var baseService: AccessibilityApi? = null
 
+        val requireBase: AccessibilityApi
+            get() = run {
+                requireBaseAccessibility(false)
+                baseService!!
+            }
+
         //无障碍高级服务 执行手势等操作
         /**
          * GestureService base on AccessibilityApi
          */
         @SuppressLint("StaticFieldLeak")
         var gestureService: AccessibilityService? = null
+
+        val requireGesture: AccessibilityService
+            get() = run {
+                requireGestureAccessibility(false)
+                gestureService!!
+            }
 
         // currentAppScope
         val currentScope get() = baseService?.currentScope
