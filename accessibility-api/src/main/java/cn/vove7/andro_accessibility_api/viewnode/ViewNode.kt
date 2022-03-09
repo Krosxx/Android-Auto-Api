@@ -331,7 +331,7 @@ class ViewNode(
             append("{ class: ").append(className)
             if (id != null) append(", id: ").append(id.substring(id.lastIndexOf('/') + 1))
             if (node.text != null) append(", text: ${node.text}")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && hintText == null) append(", hintText: $hintText")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && hintText != null) append(", hintText: $hintText")
             if (desc != null) append(", desc: $desc")
             append(", bounds: $bounds" + ", childCount: ${getChildCount()}")
             if (node.isClickable) append(", Clickable")
