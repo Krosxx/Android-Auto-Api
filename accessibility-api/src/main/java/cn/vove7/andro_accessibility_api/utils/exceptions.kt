@@ -14,7 +14,7 @@ import cn.vove7.andro_accessibility_api.viewfinder.ViewFinder
  * 视图搜索失败异常
  */
 class ViewNodeNotFoundException(finder: ViewFinder<*>) : Exception(
-    "ViewNodeNotFound: $finder"
+    "ViewNodeNotFound: ${finder.finderInfo()}"
 )
 
 /**

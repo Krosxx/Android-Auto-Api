@@ -5,19 +5,18 @@ import cn.vove7.andro_accessibility_api.viewnode.ViewNode
 
 /**
  * # SmartFinder
- * 具备扩展性
- *
+ * 高扩展性
+ * 多条件搜索
  *
  * @author Libra
  * @date 2022/2/15
  */
-
-typealias MatchCondition = (node: AccessibilityNodeInfo) -> Boolean
-
-interface Condition {
+fun interface MatchCondition {
     var type: ConditionType
+        get() = ConditionType.AND
+        set(_) {}
 
-    fun check(node: AccessibilityNodeInfo): Boolean
+    operator fun invoke(node: AccessibilityNodeInfo): Boolean
 }
 
 enum class ConditionType { AND, OR }
@@ -25,18 +24,29 @@ enum class ConditionType { AND, OR }
 class ConditionNode(
     override var type: ConditionType,
     val condition: MatchCondition
-) : Condition {
-    override fun check(node: AccessibilityNodeInfo) = condition(node)
+) : MatchCondition by condition {
+    override fun toString() = condition.toString()
 }
 
 abstract class ConditionGroup(
     node: ViewNode? = null
-) : ViewFinder<ConditionGroup>(node), Condition, FinderBuilderWithOperation {
+) : ViewFinder<ConditionGroup>(node), MatchCondition, FinderBuilderWithOperation {
 
     override var type: ConditionType = ConditionType.AND
-    private val conditions: MutableList<Condition> = mutableListOf()
+    private val conditions: MutableList<MatchCondition> = mutableListOf()
     private var lastType: ConditionType = ConditionType.AND
     override val finder: ViewFinder<*> get() = this
+
+    override fun toString() = buildString {
+        append("(")
+        conditions.forEachIndexed { i, cond ->
+            if (i > 0) {
+                append(if (cond.type == ConditionType.AND) " && " else " || ")
+            }
+            append(cond.toString())
+        }
+        append(")")
+    }
 
     fun and(vararg conditions: MatchCondition): ConditionGroup {
         if (conditions.isEmpty()) {
@@ -49,10 +59,10 @@ abstract class ConditionGroup(
         return this
     }
 
-    fun link(cond: MatchCondition) =
+    fun link(vararg cond: MatchCondition) =
         if (lastType == ConditionType.AND) {
-            and(cond)
-        } else or(cond)
+            and(*cond)
+        } else or(*cond)
 
     infix fun and(cond: MatchCondition): ConditionGroup {
         this.conditions.add(ConditionNode(ConditionType.AND, cond))
@@ -87,7 +97,7 @@ abstract class ConditionGroup(
         return this
     }
 
-    override fun check(node: AccessibilityNodeInfo): Boolean {
+    override operator fun invoke(node: AccessibilityNodeInfo): Boolean {
         if (conditions.isEmpty()) {
             throw IllegalArgumentException("SmartFinder has no conditions")
         }
@@ -95,7 +105,7 @@ abstract class ConditionGroup(
             throw IllegalStateException("first condition type must be AND")
         }
         conditions.forEachIndexed { i, cond ->
-            if (cond.check(node)) {
+            if (cond.invoke(node)) {
                 if (i + 1 < conditions.size && conditions[i + 1].type == ConditionType.OR) {
                     //break true or (..)
                     return true
@@ -126,6 +136,11 @@ val SF get() = SmartFinder()
 class SmartFinder(
     node: ViewNode? = null
 ) : ConditionGroup(node) {
-    operator fun invoke(vararg conditions: MatchCondition) = and(*conditions)
-    override fun findCondition(node: AccessibilityNodeInfo) = check(node)
+    operator fun invoke(vararg conditions: MatchCondition) = link(*conditions)
+    override fun findCondition(node: AccessibilityNodeInfo) = invoke(node)
+
+    override fun finderInfo(): String {
+        return "SmartFinder startNode: ${node?.toString() ?: "root"} " +
+                "Conditions:${super.toString()}"
+    }
 }

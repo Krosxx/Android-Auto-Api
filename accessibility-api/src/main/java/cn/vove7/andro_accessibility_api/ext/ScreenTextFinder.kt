@@ -13,6 +13,7 @@ import cn.vove7.andro_accessibility_api.viewnode.ViewNode
 class ScreenTextFinder(
     node: ViewNode? = null
 ) : ViewFinder<ScreenTextFinder>(node) {
+    override fun finderInfo() = "ScreenTextFinder"
 
     var isWeb = false
 

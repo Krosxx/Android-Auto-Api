@@ -209,4 +209,5 @@ abstract class ViewFinder<T : ViewFinder<T>>(
      */
     abstract fun findCondition(node: AccessibilityNodeInfo): Boolean
 
+    abstract fun finderInfo(): String
 }

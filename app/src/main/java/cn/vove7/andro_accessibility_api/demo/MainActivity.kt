@@ -26,6 +26,7 @@ class MainActivity : AppCompatActivity() {
             TraverseAllAction(),
             SmartFinderAction(),
             CoroutineStopAction(),
+            ToStringTestAction(),
             object : Action() {
                 override val name = "Stop"
                 override suspend fun run(act: Activity) {}

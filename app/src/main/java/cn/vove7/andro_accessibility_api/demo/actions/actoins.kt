@@ -387,3 +387,34 @@ class SendImeAction : Action() {
         }
     }
 }
+
+class ToStringTestAction : Action() {
+    override val name: String
+        get() = "ToStringTest"
+
+    fun logInfo(s: String) {
+        Log.i("SF", s)
+    }
+
+    override suspend fun run(act: Activity) {
+
+        val f1 = SF.id("111").textOrDesc("tede")
+        logInfo(f1.toString())
+
+        val f2 = SF.matchText("[0-9]+") or scrollable()
+        logInfo(f2.toString())
+
+        val f3 = SF(SF.id("11").editable()).and(SF.desc("11").clickable())
+        logInfo(f3.toString())
+
+        val f4 = SF.and(SF.id("1"))
+        logInfo(f4.toString())
+
+        val f5 = SF.id("1")
+        logInfo(f5.toString())
+
+        val f6 = SF.similarityText("111", 0.75f)
+        logInfo(f6.toString())
+
+    }
+}
