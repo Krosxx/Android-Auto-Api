@@ -89,7 +89,7 @@ interface ViewOperation {
      * 获取下级Node数量
      * @return Int?
      */
-    fun getChildCount(): Int?
+    val childCount: Int
 
     fun childAt(i: Int): ViewNode?
 

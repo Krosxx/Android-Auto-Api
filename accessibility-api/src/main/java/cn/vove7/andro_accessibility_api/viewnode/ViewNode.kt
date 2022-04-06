@@ -9,7 +9,6 @@ import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import cn.vove7.andro_accessibility_api.AccessibilityApi
-import cn.vove7.andro_accessibility_api.api.requireBaseAccessibility
 import cn.vove7.andro_accessibility_api.api.swipe
 import cn.vove7.andro_accessibility_api.utils.ScreenAdapter
 import cn.vove7.andro_accessibility_api.viewfinder.SmartFinder
@@ -96,7 +95,7 @@ class ViewNode(
         }
 
     override val parent: ViewNode?
-        get() = if(buildWithChildren) null else node.parent?.let { ViewNode(it) }
+        get() = if (buildWithChildren) null else node.parent?.let { ViewNode(it) }
 
     override fun tryClick(): Boolean {
         return tryOp(AccessibilityNodeInfo.ACTION_CLICK)
@@ -151,7 +150,8 @@ class ViewNode(
             }
         }
 
-    override fun getChildCount(): Int = node.childCount
+    override val childCount: Int
+        get() = if (buildWithChildren) childrenCache?.size ?: 0 else node.childCount
 
     override fun childAt(i: Int): ViewNode? {
         //IllegalStateException: Cannot perform this action on a not sealed instance.

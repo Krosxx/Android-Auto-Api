@@ -109,10 +109,7 @@ interface FinderBuilderWithOperation : ViewOperation {
 
     override val parent get() = node.parent
 
-
-    override fun getChildCount(): Int? {
-        return node.getChildCount()
-    }
+    override val childCount: Int get() = node.childCount
 
     override fun isClickable() = node.isClickable()
 
