@@ -336,7 +336,7 @@ class ViewNode(
             if (node.text != null) append(", text: ${node.text}")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && hintText != null) append(", hintText: $hintText")
             if (desc != null) append(", desc: $desc")
-            append(", bounds: $bounds" + ", childCount: ${getChildCount()}")
+            append(", bounds: $bounds, childCount: $childCount")
             if (node.isClickable) append(", Clickable")
             if (node.isSelected) append(", Selected")
             if (!node.isVisibleToUser) append(", InVisibleToUser")
