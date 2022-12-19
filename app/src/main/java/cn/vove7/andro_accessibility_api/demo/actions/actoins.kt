@@ -253,7 +253,7 @@ class ClickTextAction : Action() {
         val t = node.findFirst()
         toast("haveFound: $t")
         delay(1000)
-        t?.tryClick()
+        toast("点击：${node.tryClick()}")
     }
 }
 
@@ -313,8 +313,8 @@ class SmartFinderAction : Action() {
             it.isChecked
         }.find()
 
-//        SF.where(IdCondition("view_id")).or(RTextEqCondition("[0-9]+")).find()
-//        SF.id("view_id").or().matchText("[0-9]+").find()
+       // SF.where(IdCondition("view_id")).or(RTextEqCondition("[0-9]+")).find()
+       // SF.id("view_id").or().matchText("[0-9]+").find()
 
         //group  (text=="111" && desc=="111") || (text=="222" && desc=="222")
         SF.where(SF.text("111").desc("111"))
@@ -337,8 +337,7 @@ class CoroutineStopAction : Action() {
     override suspend fun run(act: Activity) {
         requireBaseAccessibility(true)
         val job = GlobalScope.async {
-            val t = SF.attachCoroutine()
-                .containsText("周三").waitFor(10000)
+            val t = SF.containsText("周三").waitFor(10000)
             AlertDialog.Builder(act).apply {
                 setTitle("Output")
                 setMessage(t.toString())

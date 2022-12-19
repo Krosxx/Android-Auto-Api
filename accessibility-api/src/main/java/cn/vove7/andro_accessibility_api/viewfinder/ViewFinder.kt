@@ -1,14 +1,14 @@
 package cn.vove7.andro_accessibility_api.viewfinder
 
 import android.view.accessibility.AccessibilityNodeInfo
-import cn.vove7.andro_accessibility_api.AccessibilityApi
-import cn.vove7.andro_accessibility_api.utils.NeedBaseAccessibilityException
+import cn.vove7.andro_accessibility_api.api.requireBaseAccessibility
 import cn.vove7.andro_accessibility_api.utils.ViewNodeNotFoundException
+import cn.vove7.andro_accessibility_api.utils.ensureActive
 import cn.vove7.andro_accessibility_api.utils.whileWaitTime
 import cn.vove7.andro_accessibility_api.viewfinder.FinderBuilderWithOperation.Companion.WAIT_MILLIS
 import cn.vove7.andro_accessibility_api.viewnode.ViewNode
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
-import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
 /**
@@ -19,20 +19,6 @@ import kotlin.coroutines.coroutineContext
 abstract class ViewFinder<T : ViewFinder<T>>(
     val node: ViewNode? = null
 ) {
-    private var coroutineCtx: CoroutineContext? = null
-
-    /**
-     * 协程支持
-     */
-    suspend fun attachCoroutine(): T {
-        coroutineCtx = coroutineContext
-        @Suppress("UNCHECKED_CAST")
-        return this as T
-    }
-
-    private fun ensureActive() {
-        coroutineCtx?.ensureActive()
-    }
 
     companion object {
         //Maximum layout recursion depth; in rare cases, there will be a layout wireless loop to prevent function stack overflow
@@ -46,9 +32,10 @@ abstract class ViewFinder<T : ViewFinder<T>>(
          * @param depths Array<Int>
          * @return ViewNode?
          */
-        fun findByDepths(depths: IntArray, node: ViewNode): ViewNode? {
+        suspend fun findByDepths(depths: IntArray, node: ViewNode): ViewNode? {
             var p: ViewNode? = node
             depths.forEach {
+                ensureActive()
                 try {
                     p = p?.childAt(it)
                 } catch (e: ArrayIndexOutOfBoundsException) {
@@ -61,7 +48,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
             return p
         }
 
-        fun findByDepths(vararg depths: Int) = findByDepths(depths, ROOT_NODE)
+        suspend fun findByDepths(vararg depths: Int) = findByDepths(depths, ROOT_NODE)
     }
 
     val startNode: ViewNode
@@ -71,30 +58,27 @@ abstract class ViewFinder<T : ViewFinder<T>>(
      * 等待搜索，在指定时间内循环搜索（视图更新），超时返回null
      * 等待View出现 同步 耗时操作
      * 主动搜索
-     * @param m Long 时限
+     * @param waitTime Long 时限
      */
-    fun waitFor(m: Long = 30000, includeInvisible: Boolean = false): ViewNode? {
-        if (!AccessibilityApi.isBaseServiceEnable) throw NeedBaseAccessibilityException()
-        val t = when {
-            m in 0..30000 -> m
-            m < 0 -> 0
+    suspend fun waitFor(
+        waitTime: Long = 30000,
+        interval: Long = 0L,
+        includeInvisible: Boolean = false
+    ): ViewNode? {
+        requireBaseAccessibility()
+        val wt = when {
+            waitTime in 0..30000 -> waitTime
+            waitTime < 0 -> 0
             else -> 30000
         }
         val beginTime = System.currentTimeMillis()
-        var sc = 0
-        val ct = Thread.currentThread()
-        val endTime = beginTime + t
-        while (System.currentTimeMillis() < endTime &&
-            !ct.isInterrupted
-        ) {
-            ensureActive()
+        val endTime = beginTime + wt
+        do {
             val node = findFirst(includeInvisible)
-            if (node != null) {
-                return node
-            } else {
-                sc++
-            }
-        }
+            if (node != null) return node
+            if (interval > 0) delay(interval)
+            else ensureActive()
+        } while (System.currentTimeMillis() < endTime)
         return null
     }
 
@@ -102,7 +86,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
      * @param includeInvisible Boolean 是否包含不可见元素
      * @return ViewNode?
      */
-    fun findFirst(includeInvisible: Boolean = false): ViewNode? {
+    suspend fun findFirst(includeInvisible: Boolean = false): ViewNode? {
         //不可见
         return traverseAllNode(startNode, includeInvisible = includeInvisible)
     }
@@ -112,30 +96,31 @@ abstract class ViewFinder<T : ViewFinder<T>>(
      * @param depths Array<Int>
      * @return ViewNode?
      */
-    fun findByDepths(vararg depths: Int): ViewNode? {
+    suspend fun findByDepths(vararg depths: Int): ViewNode? {
         return Companion.findByDepths(depths, startNode)
     }
 
     //[findAll]
-    fun find(includeInvisible: Boolean = false) = findAll(includeInvisible)
+    suspend fun find(includeInvisible: Boolean = false) = findAll(includeInvisible)
 
     @Throws(ViewNodeNotFoundException::class)
-    fun require(waitMillis: Long = WAIT_MILLIS): ViewNode {
+    suspend fun require(waitMillis: Long = WAIT_MILLIS): ViewNode {
         return waitFor(waitMillis) ?: throw ViewNodeNotFoundException(this)
     }
 
-    fun exist(): Boolean = findFirst() != null
+    suspend fun exist(): Boolean = findFirst() != null
 
     /**
      *
      * @param includeInvisible Boolean 是否包含不可见元素
      * @return Array<ViewNode> 无结果则返回空
      */
-    fun findAll(includeInvisible: Boolean = false): Array<ViewNode> {
+    suspend fun findAll(includeInvisible: Boolean = false): Array<ViewNode> {
         val l = mutableListOf<ViewNode>()
         traverseAllNode(startNode, l, includeInvisible)
         return l.toTypedArray()
     }
+
 
     /**
      * 深搜遍历
@@ -145,7 +130,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
      * @param includeInvisible Boolean 是否包含不可见元素
      * @return ViewNode?
      */
-    private fun traverseAllNode(
+    private suspend fun traverseAllNode(
         node: ViewNode?, list: MutableList<ViewNode>? = null,
         includeInvisible: Boolean = false, depth: Int = 0
     ): ViewNode? {
@@ -155,6 +140,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
             return null
         }
         node.children.forEach { childNode ->
+            ensureActive()
             if (!includeInvisible && !childNode.isVisibleToUser) {
                 return@forEach
             }
@@ -175,7 +161,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
      * 默认10s等待时间
      * @return Boolean
      */
-    fun waitHide(): Boolean {
+    suspend fun waitHide(): Boolean {
         return waitHide(10000)
     }
 
@@ -184,8 +170,8 @@ abstract class ViewFinder<T : ViewFinder<T>>(
      * @param waitMs max 60s
      * @return Boolean false 超时 true 消失
      */
-    fun waitHide(waitMs: Int): Boolean {
-        return whileWaitTime(waitMs.toLong()) {
+    suspend fun waitHide(waitMs: Int, interval: Long = 0L): Boolean {
+        return whileWaitTime(waitMs.toLong(), interval) {
             ensureActive()
             if (findFirst() != null) {
                 null
@@ -196,13 +182,9 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         } ?: false
     }
 
-    fun await(): ViewNode? {
-        return waitFor()
-    }
+    suspend fun await() = waitFor()
 
-    fun await(l: Long): ViewNode? {
-        return waitFor(l)
-    }
+    suspend fun await(l: Long): ViewNode? = waitFor(l)
 
     /**
      * 查找条件

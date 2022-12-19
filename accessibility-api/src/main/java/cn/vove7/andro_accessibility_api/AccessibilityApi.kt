@@ -179,7 +179,7 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
         @JvmOverloads
         @JvmStatic
         @Throws(NeedAccessibilityException::class)
-        fun waitAccessibility(waitMillis: Long = 30000, cls: Class<*>): Boolean {
+        suspend fun waitAccessibility(waitMillis: Long = 30000, cls: Class<*>): Boolean {
 
             val se = if (cls == BASE_SERVICE_CLS) isBaseServiceEnable
             else isGestureServiceEnable

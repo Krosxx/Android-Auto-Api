@@ -24,7 +24,7 @@ fun requireBaseAccessibility(autoJump: Boolean = false) {
     AccessibilityApi.requireBaseAccessibility(autoJump)
 }
 
-fun waitBaseAccessibility(waitMillis: Long = 30000) {
+suspend fun waitBaseAccessibility(waitMillis: Long = 30000) {
     AccessibilityApi.waitAccessibility(waitMillis, AccessibilityApi.BASE_SERVICE_CLS)
 }
 
@@ -32,11 +32,11 @@ fun requireGestureAccessibility(autoJump: Boolean = false) {
     AccessibilityApi.requireGestureAccessibility(autoJump)
 }
 
-fun waitGestureAccessibility(waitMillis: Long = 30000) {
+suspend fun waitGestureAccessibility(waitMillis: Long = 30000) {
     AccessibilityApi.waitAccessibility(waitMillis, AccessibilityApi.GESTURE_SERVICE_CLS)
 }
 
-fun waitAccessibility(waitMillis: Long = 30000, cls: Class<*>): Boolean {
+suspend fun waitAccessibility(waitMillis: Long = 30000, cls: Class<*>): Boolean {
     return AccessibilityApi.waitAccessibility(waitMillis, cls)
 }
 
@@ -90,7 +90,7 @@ fun editor(): ConditionGroup {
  * @param depths Array<Int>
  * @return ViewFindBuilder
  */
-fun withDepths(vararg depths: Int): ViewNode? {
+suspend fun withDepths(vararg depths: Int): ViewNode? {
     return ViewFinder.findByDepths(*depths)
 }
 
@@ -139,28 +139,28 @@ private fun ViewNode.printWithChild(
     }
 }
 
-fun findWith(
+suspend fun findWith(
     includeInvisible: Boolean = false,
     predicate: (AccessibilityNodeInfo) -> Boolean
 ): ViewNode? {
     return SF.where(predicate).findFirst(includeInvisible)
 }
 
-fun findAllWith(
+suspend fun findAllWith(
     includeInvisible: Boolean = false,
     predicate: (AccessibilityNodeInfo) -> Boolean
 ): Array<ViewNode> {
     return SF.where(predicate).findAll(includeInvisible)
 }
 
-fun ViewNode.findWith(
+suspend fun ViewNode.findWith(
     includeInvisible: Boolean = false,
     predicate: (AccessibilityNodeInfo) -> Boolean
 ): ViewNode? {
     return SmartFinder(this).where(predicate).findFirst(includeInvisible)
 }
 
-fun ViewNode.findAllWith(
+suspend fun ViewNode.findAllWith(
     includeInvisible: Boolean = false,
     predicate: (AccessibilityNodeInfo) -> Boolean
 ): Array<ViewNode> {

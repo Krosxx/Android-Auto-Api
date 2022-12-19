@@ -3,6 +3,7 @@ package cn.vove7.andro_accessibility_api.viewfinder
 import android.os.Build
 import androidx.annotation.RequiresApi
 import cn.vove7.andro_accessibility_api.viewnode.ViewOperation
+import kotlinx.coroutines.runBlocking
 
 /**
  * # FindBuilderWithOperation
@@ -19,7 +20,7 @@ interface FinderBuilderWithOperation : ViewOperation {
 
     val finder: ViewFinder<*>
 
-    private val node get() = finder.require()
+    private val node get() = runBlocking { finder.require() }
 
     override val id get() = node.id
     override val className get() = node.className

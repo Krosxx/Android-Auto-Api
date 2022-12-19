@@ -3,13 +3,14 @@ package cn.vove7.andro_accessibility_api.utils
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.os.SystemClock
 import android.provider.Settings
-import android.widget.Toast
 import cn.vove7.andro_accessibility_api.InitCp
-import java.util.*
+import cn.vove7.andro_accessibility_api.viewfinder.ViewFinder
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import java.util.Locale
+import kotlin.coroutines.coroutineContext
 import kotlin.math.max
 
 /**
@@ -27,16 +28,25 @@ import kotlin.math.max
  * @param run () -> T 返回空时，重新执行，直到超时
  * @return T
  */
-fun <T> whileWaitTime(waitMillis: Long, run: () -> T?): T? {
+suspend fun <T> whileWaitTime(
+    waitMillis: Long,
+    interval: Long = 0L, run: suspend () -> T?
+): T? {
     val begin = SystemClock.elapsedRealtime()
-    val ct = Thread.currentThread()
     do {
         run.invoke()?.also {
             //if 耗时操作
             return it
         }
-    } while (SystemClock.elapsedRealtime() - begin < waitMillis && !ct.isInterrupted)
+        if (interval > 0) delay(interval)
+        else ensureActive()
+    } while (SystemClock.elapsedRealtime() - begin < waitMillis)
     return null
+}
+
+
+internal suspend inline fun ensureActive() {
+    coroutineContext.ensureActive()
 }
 
 
