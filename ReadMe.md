@@ -89,6 +89,8 @@ withContext(Dispatchers.Main) {
 
 `ViewFinder` 主要方法：
 
+**注意：在`3.0.0`及之后版本，搜索方法需在协程作用域内使用，若需要`java`内调用请使用`2.1.1`版本**
+
 |                             方法                             |                             说明                             |
 | :----------------------------------------------------------: | :----------------------------------------------------------: |
 |   findFirst(includeInvisible: Boolean = false): ViewNode?    | 立即搜索，返回满足条件的第一个结果<br>includeInvisible: 是否包含不可见元素 |
@@ -418,6 +420,9 @@ dependencies {
 ```
 
 the TAG is [![](https://jitpack.io/v/com.github.Vove7/Android-Accessibility-Api.svg)](https://jitpack.io/#com.github.Vove7/Android-Accessibility-Api)
+
+**注意：在`3.0.0`及之后版本，搜索方法需在协程作用域内使用，若需要`java`内调用请使用`2.1.1`版本**
+
 
 ### 创建你的服务
 
