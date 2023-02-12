@@ -120,11 +120,15 @@ fun printLayoutInfo(includeInvisible: Boolean = true) {
     AccessibilityApi.requireBase.rootNodeOfAllWindows.printWithChild(0, 0, includeInvisible)
 }
 
-private fun ViewNode.printWithChild(
+private fun ViewNode?.printWithChild(
     index: Int,
     dep: Int,
     includeInvisible: Boolean
 ) {
+    if (this == null) {
+        Log.d("ViewNode", "*" * dep + "[$index] null")
+        return
+    }
     if (!includeInvisible && !isVisibleToUser) {
         Log.w("ViewNode", "*" * dep + "[$index] " + "InVisible")
         return
