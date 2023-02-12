@@ -13,9 +13,12 @@ import cn.vove7.andro_accessibility_api.viewfinder.ViewFinder
 /**
  * 视图搜索失败异常
  */
-class ViewNodeNotFoundException(finder: ViewFinder<*>) : Exception(
-    "ViewNodeNotFound: ${finder.finderInfo()}"
-)
+class ViewNodeNotFoundException : Exception {
+    constructor(finder: ViewFinder<*>)
+        : super("ViewNodeNotFound: ${finder.finderInfo()}")
+
+    constructor(msg: String) : super(msg)
+}
 
 /**
  * 无障碍服务未运行异常

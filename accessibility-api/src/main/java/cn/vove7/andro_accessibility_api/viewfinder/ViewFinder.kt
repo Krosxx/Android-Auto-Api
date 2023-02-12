@@ -36,7 +36,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
                 ensureActive()
                 try {
                     p = p?.childAt(it)
-                } catch (e: ArrayIndexOutOfBoundsException) {
+                } catch (e: IndexOutOfBoundsException) {
                     return null
                 }
                 if (p == null) {
@@ -101,6 +101,13 @@ abstract class ViewFinder<T : ViewFinder<T>>(
      */
     suspend fun findByDepths(vararg depths: Int): ViewNode? {
         return Companion.findByDepths(depths, startNode)
+    }
+
+    suspend fun requireByDepths(vararg depths: Int): ViewNode {
+        return findByDepths(*depths)
+            ?: throw ViewNodeNotFoundException(
+                "can not find view by depths: ${depths.contentToString()}" +
+                    ", startNode: ${node ?: "root"}")
     }
 
     //[findAll]
