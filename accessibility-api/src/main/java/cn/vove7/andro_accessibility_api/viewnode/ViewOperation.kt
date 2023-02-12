@@ -101,7 +101,11 @@ interface ViewOperation {
     fun childAt(i: Int): ViewNode?
 
     fun requireChildAt(i: Int): ViewNode {
-        return childAt(i) ?: throw NullPointerException("child is null at $i of $this")
+        return try {
+            childAt(i) ?: throw NullPointerException("child is null at $i of $this")
+        } catch (e: IndexOutOfBoundsException) {
+            throw IndexOutOfBoundsException("get child is out of bounds, index: $i, size: $childCount of $this")
+        }
     }
 
     /**
