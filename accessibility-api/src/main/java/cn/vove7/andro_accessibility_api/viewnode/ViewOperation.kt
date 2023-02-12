@@ -3,6 +3,8 @@ package cn.vove7.andro_accessibility_api.viewnode
 import android.graphics.Point
 import android.graphics.Rect
 import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityNodeInfo.RangeInfo
+import cn.vove7.andro_accessibility_api.utils.ViewChildList
 import cn.vove7.andro_accessibility_api.viewfinder.SmartFinder
 
 /**
@@ -27,31 +29,36 @@ interface ViewOperation {
      * 获取中心点坐标(绝对)
      * @return Point?
      */
-    fun getCenterPoint(): Point?
+    fun getCenterPoint(): Point
 
     /**
      * 获取下级所有Node
      * @return Array<ViewNode>
      */
-    val children: Array<ViewNode>
+    val children: ViewChildList
 
     /**
      * 获取边界范围
      * @return Rect
      */
-    val bounds: Rect?
+    val bounds: Rect
 
     /**
      * 获取基于父级容器边界范围
      * @return Rect
      */
-    val boundsInParent: Rect?
+    val boundsInParent: Rect
 
     /**
      * 获取父级Node
      * @return ViewNode?
      */
     val parent: ViewNode?
+
+    val requireParent: ViewNode
+        get() {
+            return parent ?: throw NullPointerException("parent is null of $this")
+        }
 
     /**
      * 点击此Node
@@ -93,6 +100,10 @@ interface ViewOperation {
 
     fun childAt(i: Int): ViewNode?
 
+    fun requireChildAt(i: Int): ViewNode {
+        return childAt(i) ?: throw NullPointerException("child is null at $i of $this")
+    }
+
     /**
      * 长按操作
      * @return Boolean
@@ -120,6 +131,10 @@ interface ViewOperation {
     var text: CharSequence?
 
     var hintText: CharSequence?
+
+    var progress: Float
+
+    val rangeInfo: RangeInfo
 
     /**
      * 追加文本

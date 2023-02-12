@@ -8,8 +8,6 @@ import cn.vove7.andro_accessibility_api.utils.whileWaitTime
 import cn.vove7.andro_accessibility_api.viewfinder.FinderBuilderWithOperation.Companion.WAIT_MILLIS
 import cn.vove7.andro_accessibility_api.viewnode.ViewNode
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.ensureActive
-import kotlin.coroutines.coroutineContext
 
 /**
  * 查找符合条件的AccessibilityNodeInfo
@@ -82,6 +80,11 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         return null
     }
 
+    @Throws(ViewNodeNotFoundException::class)
+    suspend fun requireFirst(includeInvisible: Boolean = false): ViewNode {
+        return findFirst(includeInvisible) ?: throw ViewNodeNotFoundException(this)
+    }
+
     /**
      * @param includeInvisible Boolean 是否包含不可见元素
      * @return ViewNode?
@@ -104,8 +107,13 @@ abstract class ViewFinder<T : ViewFinder<T>>(
     suspend fun find(includeInvisible: Boolean = false) = findAll(includeInvisible)
 
     @Throws(ViewNodeNotFoundException::class)
-    suspend fun require(waitMillis: Long = WAIT_MILLIS): ViewNode {
-        return waitFor(waitMillis) ?: throw ViewNodeNotFoundException(this)
+    suspend fun require(
+        waitMillis: Long = WAIT_MILLIS,
+        interval: Long = 0L,
+        includeInvisible: Boolean = false
+    ): ViewNode {
+        return waitFor(waitMillis, interval, includeInvisible)
+            ?: throw ViewNodeNotFoundException(this)
     }
 
     suspend fun exist(): Boolean = findFirst() != null
@@ -141,6 +149,9 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         }
         node.children.forEach { childNode ->
             ensureActive()
+            if (childNode == null) {
+                return@forEach
+            }
             if (!includeInvisible && !childNode.isVisibleToUser) {
                 return@forEach
             }
@@ -158,19 +169,10 @@ abstract class ViewFinder<T : ViewFinder<T>>(
     }
 
     /**
-     * 默认10s等待时间
-     * @return Boolean
-     */
-    suspend fun waitHide(): Boolean {
-        return waitHide(10000)
-    }
-
-    /**
      * 等待消失  常用于加载View的消失
-     * @param waitMs max 60s
      * @return Boolean false 超时 true 消失
      */
-    suspend fun waitHide(waitMs: Int, interval: Long = 0L): Boolean {
+    suspend fun waitHide(waitMs: Int, interval: Long = 50L): Boolean {
         return whileWaitTime(waitMs.toLong(), interval) {
             ensureActive()
             if (findFirst() != null) {

@@ -11,6 +11,7 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import cn.vove7.andro_accessibility_api.AccessibilityApi
 import cn.vove7.andro_accessibility_api.api.swipe
 import cn.vove7.andro_accessibility_api.utils.ScreenAdapter
+import cn.vove7.andro_accessibility_api.utils.ViewChildList
 import cn.vove7.andro_accessibility_api.viewfinder.SmartFinder
 import java.lang.Thread.sleep
 
@@ -30,7 +31,7 @@ class ViewNode(
      */
     var similarityText: Float = 0f
 
-    private var childrenCache: Array<ViewNode>? = null
+    private var childrenCache: ViewChildList? = null
 
     private var buildWithChildren = false
 
@@ -39,13 +40,20 @@ class ViewNode(
 
         private const val ROOT_TAG = "ViewNodeRoot"
 
-        private fun rootNodesOfAllWindows() =
+        private fun rootNodesOfAllWindows(): ViewChildList =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                AccessibilityApi.requireBase.windows?.mapNotNull {
-                    it.root?.let { r -> ViewNode(r.also(AccessibilityNodeInfo::refresh)) }
-                } ?: emptyList()
+                ViewChildList().also { list ->
+                    AccessibilityApi.requireBase.windows?.forEach { win ->
+                        list.add(
+                            win.root?.let { r -> ViewNode(r.also(AccessibilityNodeInfo::refresh)) }
+                        )
+
+                    }
+                }
             } else {
-                AccessibilityApi.requireBase.activeWinNode?.let { listOf(it) } ?: emptyList()
+                ViewChildList().also { list ->
+                    list.add(AccessibilityApi.requireBase.activeWinNode)
+                }
             }
 
         /**
@@ -65,12 +73,12 @@ class ViewNode(
             }
         }
 
-        fun withChildren(cs: List<ViewNode>): ViewNode {
+        fun withChildren(cs: ViewChildList): ViewNode {
             val root = AccessibilityNodeInfo.obtain()
             root.className = "${ROOT_TAG}[Win Size: ${cs.size}]"
             return ViewNode(root).apply {
                 buildWithChildren = true
-                childrenCache = cs.toTypedArray()
+                childrenCache = cs
             }
         }
     }
@@ -131,21 +139,19 @@ class ViewNode(
         return i != TRY_OP_NUM
     }
 
-    fun clearChildCache() {
+    fun clearChildrenCache() {
         if (!buildWithChildren) {
             childrenCache = null
         }
     }
 
-    override val children: Array<ViewNode>
+    override val children: ViewChildList
         get() {
             val cc = childrenCache
             if (cc != null) {
                 return cc
             }
-            return (0 until node.childCount).mapNotNull { i ->
-                node.getChild(i)?.let { ViewNode(it) }
-            }.toTypedArray().also {
+            return ViewChildList(this).also {
                 childrenCache = it
             }
         }
@@ -252,6 +258,21 @@ class ViewNode(
         set(value) {
             node.hintText = value
         }
+
+    override var progress: Float
+        @RequiresApi(Build.VERSION_CODES.KITKAT)
+        get() = node.rangeInfo.current
+        @RequiresApi(Build.VERSION_CODES.N)
+        set(value) {
+            node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS.id,
+                Bundle().also {
+                    it.putFloat(AccessibilityNodeInfo.ACTION_ARGUMENT_PROGRESS_VALUE, value)
+                })
+        }
+
+    override val rangeInfo: AccessibilityNodeInfo.RangeInfo
+        @RequiresApi(Build.VERSION_CODES.KITKAT)
+        get() = node.rangeInfo
 
     override fun desc(): String? {
         return node.contentDescription?.toString()
@@ -368,7 +389,7 @@ class ViewNode(
 
     override fun refresh(): Boolean {
         if (buildWithChildren) {
-            childrenCache = rootNodesOfAllWindows().toTypedArray()
+            childrenCache = rootNodesOfAllWindows()
             return true
         }
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {

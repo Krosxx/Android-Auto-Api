@@ -1,6 +1,7 @@
 package cn.vove7.andro_accessibility_api.viewfinder
 
 import android.os.Build
+import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
 import cn.vove7.andro_accessibility_api.viewnode.ViewOperation
 import kotlinx.coroutines.runBlocking
@@ -52,6 +53,18 @@ interface FinderBuilderWithOperation : ViewOperation {
         set(value) {
             node.hintText = value
         }
+
+    override var progress: Float
+        @RequiresApi(Build.VERSION_CODES.KITKAT)
+        get() = node.progress
+        @RequiresApi(Build.VERSION_CODES.N)
+        set(value) {
+            node.progress = value
+        }
+
+    override val rangeInfo: AccessibilityNodeInfo.RangeInfo
+        @RequiresApi(Build.VERSION_CODES.KITKAT)
+        get() = node.rangeInfo
 
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     override fun setSelection(start: Int, end: Int): Boolean = node.setSelection(start, end)
