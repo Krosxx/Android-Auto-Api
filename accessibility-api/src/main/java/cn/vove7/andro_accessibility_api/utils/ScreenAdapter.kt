@@ -7,7 +7,7 @@ import android.os.Build
 import android.util.DisplayMetrics
 import android.util.Pair
 import android.view.WindowManager
-import cn.vove7.andro_accessibility_api.InitCp
+import cn.vove7.andro_accessibility_api.AccessibilityApi
 
 /**
  * # ScreenAdapter
@@ -20,7 +20,7 @@ object ScreenAdapter {
     private val deviceWidth: Int
 
     init {
-        val display = (InitCp.AppIns.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
+        val display = (AccessibilityApi.appCtx.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
             .defaultDisplay
         when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 -> {

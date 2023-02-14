@@ -25,10 +25,11 @@ class DemoApp : Application() {
         INS = this
         super.onCreate()
 
-        AccessibilityApi.apply {
-            BASE_SERVICE_CLS = BaseAccessibilityService::class.java
-            GESTURE_SERVICE_CLS = GestureAccessibilityService::class.java
-        }
+        AccessibilityApi.init(this,
+            BaseAccessibilityService::class.java,
+            GestureAccessibilityService::class.java
+        )
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(Intent(this, ForegroundService::class.java))
         } else {

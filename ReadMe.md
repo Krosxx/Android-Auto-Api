@@ -572,10 +572,9 @@ class GestureAccessibilityService : AccessibilityService() {
 ```kotlin
 override fun onCreate() {
     super.onCreate()
-    AccessibilityApi.apply {
-        BASE_SERVICE_CLS = BaseAccessibilityService::class.java
-        GESTURE_SERVICE_CLS = GestureAccessibilityService::class.java
-    }
+    AccessibilityApi.init(this,
+        BaseAccessibilityService::class.java,
+        GestureAccessibilityService::class.java)
 }
 ```
 
@@ -594,13 +593,11 @@ class MyAccessibilityService : AccessibilityApi() {
     override val enableListenAppScope: Boolean = true
     override fun onCreate() {
         //同时设置
-        baseService = this
         AccessibilityApi.gestureService = this
         super.onCreate()
     }
     override fun onDestroy() {
         //同时设置
-        baseService = null
         AccessibilityApi.gestureService = null
         super.onDestroy()
     }

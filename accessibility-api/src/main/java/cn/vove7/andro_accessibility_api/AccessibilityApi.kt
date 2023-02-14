@@ -2,6 +2,7 @@ package cn.vove7.andro_accessibility_api
 
 import android.accessibilityservice.AccessibilityService
 import android.annotation.SuppressLint
+import android.content.Context
 import android.view.View
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -135,6 +136,22 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
     companion object {
         lateinit var BASE_SERVICE_CLS: Class<*>
         lateinit var GESTURE_SERVICE_CLS: Class<*>
+
+        @SuppressLint("StaticFieldLeak")
+        private var appCtx_: Context? = null
+        val appCtx
+            get() = appCtx_ ?: throw NullPointerException(
+                "please call AccessibilityApi.init(...) in Application.onCreate()")
+
+        fun init(
+            ctx: Context,
+            baseServiceCls: Class<*>,
+            gestureServiceCls: Class<*> = baseServiceCls
+        ) {
+            appCtx_ = ctx.applicationContext
+            BASE_SERVICE_CLS = baseServiceCls
+            GESTURE_SERVICE_CLS = gestureServiceCls
+        }
 
         private fun isEnableGestureService() = ::GESTURE_SERVICE_CLS.isInitialized
 

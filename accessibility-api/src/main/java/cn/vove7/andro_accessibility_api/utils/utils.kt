@@ -1,12 +1,12 @@
 package cn.vove7.andro_accessibility_api.utils
 
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
 import android.provider.Settings
-import cn.vove7.andro_accessibility_api.InitCp
-import cn.vove7.andro_accessibility_api.viewfinder.ViewFinder
+import cn.vove7.andro_accessibility_api.AccessibilityApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import java.util.Locale
@@ -50,11 +50,14 @@ internal suspend inline fun ensureActive() {
 }
 
 
-fun jumpAccessibilityServiceSettings(cls: Class<*>) {
+fun jumpAccessibilityServiceSettings(
+    cls: Class<*>,
+    ctx: Context = AccessibilityApi.appCtx
+) {
     val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    intent.putComponent(InitCp.AppIns.packageName, cls)
-    InitCp.AppIns.startActivity(intent)
+    intent.putComponent(AccessibilityApi.appCtx.packageName, cls)
+    ctx.startActivity(intent)
 }
 
 private fun Intent.putComponent(pkg: String, cls: Class<*>) {
