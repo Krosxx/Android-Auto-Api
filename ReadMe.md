@@ -588,19 +588,10 @@ override fun onCreate() {
 1. 创建服务
 
 ```kotlin
-class MyAccessibilityService : AccessibilityApi() {
+class AppAccessibilityService : AccessibilityApi() {
     //启用 页面更新 回调
     override val enableListenAppScope: Boolean = true
-    override fun onCreate() {
-        //同时设置
-        AccessibilityApi.gestureService = this
-        super.onCreate()
-    }
-    override fun onDestroy() {
-        //同时设置
-        AccessibilityApi.gestureService = null
-        super.onDestroy()
-    }
+
     //页面更新回调
     override fun onPageUpdate(currentScope: AppScope) {
         Log.d("TAG", "onPageUpdate: $currentScope")
@@ -613,7 +604,7 @@ class MyAccessibilityService : AccessibilityApi() {
 
 ```xml
 <service
-    android:name=".service.MyAccessibilityService"
+    android:name=".service.AppAccessibilityService"
     android:description="@string/ser_desc"
     android:label="Service Demo"
     android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
@@ -638,7 +629,7 @@ class MyAccessibilityService : AccessibilityApi() {
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeWindowStateChanged"
     android:accessibilityFeedbackType="feedbackAllMask"
-                       android:accessibilityFlags="flagIncludeNotImportantViews|flagReportViewIds|flagRetrieveInteractiveWindows|flagRequestEnhancedWebAccessibility"
+    android:accessibilityFlags="flagIncludeNotImportantViews|flagReportViewIds|flagRetrieveInteractiveWindows|flagRequestEnhancedWebAccessibility"
     android:canRetrieveWindowContent="true"
     android:description="@string/base_ser_desc"
     android:notificationTimeout="10"
@@ -654,10 +645,12 @@ class MyAccessibilityService : AccessibilityApi() {
 
 4. Application 初始化配置 
 
+在 Application 中初始化：
+
 ```kotlin
-AccessibilityApi.apply {
-    BASE_SERVICE_CLS = MyAccessibilityService::class.java
-    GESTURE_SERVICE_CLS = MyAccessibilityService::class.java
+override fun onCreate() {
+    super.onCreate()
+    AccessibilityApi.init(this, AppAccessibilityService::class.java)
 }
 ```
 
