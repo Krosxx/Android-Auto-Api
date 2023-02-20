@@ -25,12 +25,11 @@
         </activity>
         <activity android:name=".DrawableActivity" />
 
-
         <service
-            android:name=".service.BaseAccessibilityService"
+            android:name=".service.AppAccessibilityService"
             android:exported="false"
             android:description="@string/base_ser_desc"
-            android:label="BaseService Demo"
+            android:label="Accessibility-Api Demo"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
@@ -42,20 +41,6 @@
         </service>
 
 
-        <service
-            android:name=".service.GestureAccessibilityService"
-            android:description="@string/ges_ser_desc"
-            android:label="Gesture Service Demo"
-            android:exported="false"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/gesture_accessibility_config" />
-        </service>
         <service android:name=".service.ForegroundService" />
 
     </application>

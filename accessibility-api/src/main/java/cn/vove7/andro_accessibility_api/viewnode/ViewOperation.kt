@@ -74,7 +74,7 @@ interface ViewOperation {
      */
     fun globalClick(): Boolean
 
-    fun globalLongClick(): Boolean
+    suspend fun globalLongClick(): Boolean
 
     /**
      * 以此Node中心滑动到dx,dy的地方
@@ -84,7 +84,7 @@ interface ViewOperation {
      * @param delay Int 用时
      * @return Boolean
      */
-    fun swipe(dx: Int, dy: Int, delay: Int): Boolean
+    fun swipeOffset(dx: Int, dy: Int, delay: Int): Boolean
 
     /**
      * 尝试长按，机制类似tryClick

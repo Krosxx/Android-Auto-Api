@@ -13,6 +13,7 @@ import cn.vove7.andro_accessibility_api.api.swipe
 import cn.vove7.andro_accessibility_api.utils.ScreenAdapter
 import cn.vove7.andro_accessibility_api.utils.ViewChildList
 import cn.vove7.andro_accessibility_api.viewfinder.SmartFinder
+import kotlinx.coroutines.runBlocking
 import java.lang.Thread.sleep
 
 /**
@@ -113,11 +114,13 @@ class ViewNode(
     override fun globalClick(): Boolean {
         //获得中心点
         val relp = ScreenAdapter.getRelPoint(getCenterPoint())
-        return cn.vove7.andro_accessibility_api.api.click(relp.x, relp.y)
+        return runBlocking {
+            cn.vove7.andro_accessibility_api.api.click(relp.x, relp.y)
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
-    override fun globalLongClick(): Boolean {
+    override suspend fun globalLongClick(): Boolean {
         val relp = ScreenAdapter.getRelPoint(getCenterPoint())
         return cn.vove7.andro_accessibility_api.api.longClick(relp.x, relp.y)
     }
@@ -308,9 +311,11 @@ class ViewNode(
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
-    override fun swipe(dx: Int, dy: Int, delay: Int): Boolean {
+    override fun swipeOffset(dx: Int, dy: Int, delay: Int): Boolean {
         val c = ScreenAdapter.getRelPoint(getCenterPoint())
-        return swipe(c.x, c.y, c.x + dx, c.y + dy, delay)
+        return runBlocking {
+            swipe(c.x, c.y, c.x + dx, c.y + dy, delay)
+        }
     }
 
     override fun focus(): Boolean {

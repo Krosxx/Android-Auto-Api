@@ -4,9 +4,8 @@ import android.app.Application
 import android.content.Intent
 import android.os.Build
 import cn.vove7.andro_accessibility_api.AccessibilityApi
+import cn.vove7.andro_accessibility_api.demo.service.AppAccessibilityService
 import cn.vove7.andro_accessibility_api.demo.service.ForegroundService
-import cn.vove7.andro_accessibility_api.demo.service.GestureAccessibilityService
-import cn.vove7.andro_accessibility_api.demo.service.BaseAccessibilityService
 
 /**
  * # DemoApp
@@ -26,8 +25,7 @@ class DemoApp : Application() {
         super.onCreate()
 
         AccessibilityApi.init(this,
-            BaseAccessibilityService::class.java,
-            GestureAccessibilityService::class.java
+            AppAccessibilityService::class.java
         )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

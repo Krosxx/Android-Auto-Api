@@ -10,7 +10,7 @@ import cn.vove7.andro_accessibility_api.AppScope
  * Created on 2020/6/10
  * @author Vove
  */
-class BaseAccessibilityService : AccessibilityApi() {
+class AppAccessibilityService : AccessibilityApi() {
 
     //启用 页面更新 回调
     override val enableListenAppScope: Boolean = true

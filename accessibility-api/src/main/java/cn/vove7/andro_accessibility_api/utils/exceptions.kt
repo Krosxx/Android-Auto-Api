@@ -1,5 +1,6 @@
 package cn.vove7.andro_accessibility_api.utils
 
+import android.accessibilityservice.GestureDescription
 import cn.vove7.andro_accessibility_api.AccessibilityApi
 import cn.vove7.andro_accessibility_api.viewfinder.ViewFinder
 
@@ -31,3 +32,7 @@ class NeedBaseAccessibilityException :
 
 class NeedGestureAccessibilityException :
     NeedAccessibilityException(AccessibilityApi.GESTURE_SERVICE_CLS.name)
+
+class GestureCanceledException(
+    val gestureDescription: GestureDescription
+) : RuntimeException()

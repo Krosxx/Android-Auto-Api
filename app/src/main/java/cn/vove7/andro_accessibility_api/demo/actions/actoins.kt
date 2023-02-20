@@ -1,5 +1,7 @@
 package cn.vove7.andro_accessibility_api.demo.actions
 
+import android.accessibilityservice.AccessibilityService.GestureResultCallback
+import android.accessibilityservice.GestureDescription
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Path
@@ -89,15 +91,16 @@ class DrawableAction : Action() {
         //设置相对屏幕 非必须
         setScreenSize(500, 500)
         //指定点转路径手势
-        gesture(
-            2000L, arrayOf(
+        if (!gesture(
+                2000L, arrayOf(
                 100 t 100,
                 100 t 200,
                 200 t 200,
                 200 t 100,
                 100 t 100
-            )
-        )
+            ))) {
+            toast("打断")
+        }
         delay(800)
         //点击clear按钮
         withText("clear").tryClick()
@@ -105,25 +108,51 @@ class DrawableAction : Action() {
         delay(800)
         withText("clear").tryClick()
         drawOval()
+
+        delay(800)
+        withText("clear").tryClick()
+        drawCircleAsync()
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
-    fun drawCircle() {
+    suspend fun drawCircle() {
         val p = Path().apply {
             addOval(RectF(500f, 500f, 800f, 800f), Path.Direction.CW)
         }
-        gesture(2000L, p) {
+        if (!gesture(2000L, p)) {
             toast("打断")
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
+    suspend fun drawCircleAsync() {
+        val p = Path().apply {
+            addOval(RectF(500f, 500f, 800f, 800f), Path.Direction.CW)
+        }
+        gestureAsync(2000L, p, object : GestureResultCallback() {
+            override fun onCompleted(gestureDescription: GestureDescription?) {
+                toast("gestureAsync 完成")
+            }
+
+            override fun onCancelled(gestureDescription: GestureDescription?) {
+                toast("gestureAsync 中断")
+            }
+        })
+        delay(800)
+        // 测试手势中断
+        click(250, 250)
+        delay(3000)
+    }
+
     //AdapterRectF 会根据设置的相对屏幕大小换算
     @RequiresApi(Build.VERSION_CODES.N)
-    fun drawOval() {
+    suspend fun drawOval() {
         val p = Path().apply {
             addOval(AdapterRectF(200f, 200f, 300f, 300f), Path.Direction.CW)
         }
-        gesture(2000L, p)
+        if (!gesture(2000L, p)) {
+            toast("打断")
+        }
     }
 
     infix fun <A, B> A.t(that: B): Pair<A, B> = Pair(this, that)
@@ -306,15 +335,15 @@ class SmartFinderAction : Action() {
         sb.appendLine(s?.toString())
 
         (SF where text("1111") or text("2222")
-                and id("111") or longClickable()).findAll()
+            and id("111") or longClickable()).findAll()
 
 
         SF.where {
             it.isChecked
         }.find()
 
-       // SF.where(IdCondition("view_id")).or(RTextEqCondition("[0-9]+")).find()
-       // SF.id("view_id").or().matchText("[0-9]+").find()
+        // SF.where(IdCondition("view_id")).or(RTextEqCondition("[0-9]+")).find()
+        // SF.id("view_id").or().matchText("[0-9]+").find()
 
         //group  (text=="111" && desc=="111") || (text=="222" && desc=="222")
         SF.where(SF.text("111").desc("111"))

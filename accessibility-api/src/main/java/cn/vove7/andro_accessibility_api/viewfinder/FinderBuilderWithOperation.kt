@@ -27,7 +27,7 @@ interface FinderBuilderWithOperation : ViewOperation {
     override val className get() = node.className
 
     @RequiresApi(Build.VERSION_CODES.N)
-    override fun globalLongClick() = node.globalLongClick()
+    override suspend fun globalLongClick() = node.globalLongClick()
 
     override fun tryClick() = node.tryClick()
 
@@ -108,7 +108,7 @@ interface FinderBuilderWithOperation : ViewOperation {
     override fun scrollLeft() = node.scrollLeft()
 
     @RequiresApi(Build.VERSION_CODES.N)
-    override fun swipe(dx: Int, dy: Int, delay: Int) = node.swipe(dx, dy, delay)
+    override fun swipeOffset(dx: Int, dy: Int, delay: Int) = node.swipeOffset(dx, dy, delay)
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun scrollRight() = node.scrollRight()

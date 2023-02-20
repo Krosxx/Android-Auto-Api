@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Android-Accessibility-Api</string>
-    <string name="base_ser_desc">BaseService Demo Desc</string>
-    <string name="ges_ser_desc">GestureService Demo Desc</string>
+    <string name="base_ser_desc">Accessibility-Api Demo desc</string>
     <string name="fore_service">前台服务</string>
 </resources>
