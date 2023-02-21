@@ -204,12 +204,9 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
             if (se) return true
             else jumpAccessibilityServiceSettings(cls)
 
-            return whileWaitTime(min(30000, waitMillis)) {
+            return whileWaitTime(min(30000, waitMillis), 500) {
                 if (isBaseServiceEnable) true
-                else {
-                    sleep(500)
-                    null
-                }
+                else null
             } ?: throw NeedAccessibilityException(cls.name)
         }
 

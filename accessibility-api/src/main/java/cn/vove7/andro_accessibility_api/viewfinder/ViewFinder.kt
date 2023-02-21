@@ -60,7 +60,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
      */
     suspend fun waitFor(
         waitTime: Long = 30000,
-        interval: Long = 0L,
+        interval: Long = 20L,
         includeInvisible: Boolean = false
     ): ViewNode? {
         requireBaseAccessibility()
@@ -116,7 +116,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
     @Throws(ViewNodeNotFoundException::class)
     suspend fun require(
         waitMillis: Long = WAIT_MILLIS,
-        interval: Long = 0L,
+        interval: Long = 20L,
         includeInvisible: Boolean = false
     ): ViewNode {
         return waitFor(waitMillis, interval, includeInvisible)
@@ -181,7 +181,6 @@ abstract class ViewFinder<T : ViewFinder<T>>(
      */
     suspend fun waitHide(waitMs: Int, interval: Long = 50L): Boolean {
         return whileWaitTime(waitMs.toLong(), interval) {
-            ensureActive()
             if (findFirst() != null) {
                 null
             }//显示，继续等待
