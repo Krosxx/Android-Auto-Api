@@ -13,7 +13,6 @@ import cn.vove7.andro_accessibility_api.utils.whileWaitTime
 import cn.vove7.andro_accessibility_api.viewnode.ViewNode
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.lang.Thread.sleep
 import kotlin.math.min
 
 /**
@@ -23,7 +22,7 @@ import kotlin.math.min
  */
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
-    //implement of BaseServiceApi
+    // implement of BaseServiceApi
     override val _baseService: AccessibilityService get() = this
 
     abstract val enableListenAppScope: Boolean
@@ -31,13 +30,12 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
     var currentScope: AppScope? = null
         private set
 
-    //activity or dialog
+    // activity or dialog
     var currentPage: String? = null
         private set
         get() = currentScope?.packageName
 
-    override fun onCreate() {
-        super.onCreate()
+    override fun onServiceConnected() {
         if (this::class.java == BASE_SERVICE_CLS) {
             baseService = this
         }
@@ -61,7 +59,7 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
      */
     val activeWinNode: ViewNode? get() = ViewNode.activeWinNode()
 
-    //适应 多窗口 分屏
+    // 适应 多窗口 分屏
     val rootNodeOfAllWindows get() = ViewNode.getRoot()
 
     override fun getRootInActiveWindow(): AccessibilityNodeInfo? {
@@ -119,7 +117,7 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
         event ?: return
 
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            //界面切换
+            // 界面切换
             val classNameStr = event.className
             val pkg = event.packageName as String?
             if (!classNameStr.isNullOrBlank() && pkg != null) {
@@ -155,7 +153,7 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
 
         private fun isEnableGestureService() = ::GESTURE_SERVICE_CLS.isInitialized
 
-        //无障碍基础服务
+        // 无障碍基础服务
         @SuppressLint("StaticFieldLeak")
         var baseService: AccessibilityApi? = null
 
@@ -165,7 +163,7 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
                 baseService!!
             }
 
-        //无障碍高级服务 执行手势等操作
+        // 无障碍高级服务 执行手势等操作
         /**
          * GestureService base on AccessibilityApi
          */
@@ -184,6 +182,9 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
         // Service is enable
         val isBaseServiceEnable: Boolean
             get() = (baseService != null)
+
+        val isServiceEnable: Boolean
+            get() = isBaseServiceEnable
 
         val isGestureServiceEnable: Boolean get() = gestureService != null
 
@@ -210,7 +211,7 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
             } ?: throw NeedAccessibilityException(cls.name)
         }
 
-        //声明 需要基础无障碍权限
+        // 声明 需要基础无障碍权限
         fun requireBaseAccessibility(autoJump: Boolean = false) {
             if (!isBaseServiceEnable) {
                 if (autoJump) jumpAccessibilityServiceSettings(BASE_SERVICE_CLS)
@@ -218,7 +219,7 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
             }
         }
 
-        //声明 需要手势无障碍权限
+        // 声明 需要手势无障碍权限
         fun requireGestureAccessibility(autoJump: Boolean = false) {
             if (!isGestureServiceEnable) {
                 if (autoJump) jumpAccessibilityServiceSettings(GESTURE_SERVICE_CLS)
