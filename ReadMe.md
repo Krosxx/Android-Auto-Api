@@ -4,7 +4,11 @@
 
 > 安卓无障碍服务Api, 为了简化无障碍服务使用，并使用 Kotlin 以提供简洁的Api。
 
-[TOC]
+
+<br>
+
+**由于4.0版本代码进行重构，之前接入的项目需要修改 `import package`, 并且 `
+implementation 'com.github.Vove7.Android-Accessibility-Api:accessibility-api:4.0.0'`。UiAutomator 可参考 [Demo App](app)。**
 
 
 
