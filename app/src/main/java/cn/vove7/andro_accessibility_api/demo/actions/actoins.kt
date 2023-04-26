@@ -26,6 +26,7 @@ import cn.vove7.auto.core.utils.AdapterRectF
 import cn.vove7.auto.core.utils.AutoGestureDescription
 import cn.vove7.auto.core.utils.GestureResultCallback
 import cn.vove7.auto.core.viewfinder.*
+import cn.vove7.auto.core.viewnode.ViewNode
 import kotlinx.coroutines.*
 import timber.log.Timber
 import kotlin.coroutines.coroutineContext
@@ -82,6 +83,20 @@ class PickScreenText : Action() {
                 show()
             }
         }
+    }
+}
+
+class SiblingTestAction :Action() {
+    override val name: String = "SiblingTest"
+
+    override suspend fun run(act: ComponentActivity) {
+        printLayoutInfo()
+        val view = withText(name).requireFirst()
+        Timber.i("view: $view")
+        Timber.i("view.previousSibling: ${view.previousSibling}")
+        Timber.i("view.nextSibling: ${view.nextSibling}")
+        check(view.previousSibling?.nextSibling == view)
+        toast("assert success")
     }
 }
 

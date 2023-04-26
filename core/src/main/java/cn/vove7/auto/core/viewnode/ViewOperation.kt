@@ -2,10 +2,8 @@ package cn.vove7.auto.core.viewnode
 
 import android.graphics.Point
 import android.graphics.Rect
-import android.os.Build
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityNodeInfo.RangeInfo
-import androidx.annotation.RequiresApi
 import cn.vove7.auto.core.utils.ViewChildList
 import cn.vove7.auto.core.viewfinder.SmartFinder
 
@@ -56,6 +54,10 @@ interface ViewOperation {
      * @return ViewNode?
      */
     val parent: ViewNode?
+
+    // 兄弟结点
+    val previousSibling: ViewNode?
+    val nextSibling: ViewNode?
 
     val requireParent: ViewNode
         get() {
@@ -151,7 +153,7 @@ interface ViewOperation {
 
     fun desc(): CharSequence?
 
-    //选择
+    // 选择
     fun select(): Boolean
 
     fun setSelection(start: Int, end: Int): Boolean
@@ -159,14 +161,14 @@ interface ViewOperation {
 
     fun trySelect(): Boolean
 
-    //获得焦点
+    // 获得焦点
     fun focus(): Boolean
 
     fun clearFocus(): Boolean
 
     /***以下不常用***/
 
-    //一般
+    // 一般
     fun scrollUp(): Boolean
 
     fun scrollDown(): Boolean

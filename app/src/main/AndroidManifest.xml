@@ -9,9 +9,6 @@
     <instrumentation
         android:name=".MyInstrumentation"
         android:targetPackage="${applicationId}" />
-    <instrumentation
-        android:name="cn.vove7.accessibility.uiauto.AutoInstrumentation"
-        android:targetPackage="${applicationId}" />
     <application
         android:name=".DemoApp"
         android:allowBackup="true"

@@ -2,6 +2,7 @@ package cn.vove7.auto.core.viewfinder
 
 import android.view.accessibility.AccessibilityNodeInfo
 import cn.vove7.auto.core.viewnode.ViewNode
+import cn.vove7.auto.core.viewnode.ViewOperation
 
 /**
  * # SmartFinder

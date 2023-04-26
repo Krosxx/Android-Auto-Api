@@ -3,6 +3,7 @@ package cn.vove7.auto.core.viewfinder
 import android.os.Build
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
+import cn.vove7.auto.core.viewnode.ViewNode
 import cn.vove7.auto.core.viewnode.ViewOperation
 import kotlinx.coroutines.runBlocking
 
@@ -143,4 +144,9 @@ interface FinderBuilderWithOperation : ViewOperation {
 
     @RequiresApi(Build.VERSION_CODES.R)
     override fun sendImeAction() = node.sendImeAction()
+
+    override val previousSibling: ViewNode?
+        get() = node.previousSibling
+    override val nextSibling: ViewNode?
+        get() = node.nextSibling
 }

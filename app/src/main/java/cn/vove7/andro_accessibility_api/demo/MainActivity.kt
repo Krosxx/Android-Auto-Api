@@ -26,6 +26,7 @@ class MainActivity : AppCompatActivity() {
         val actions = mutableListOf(
             BaseNavigatorAction(),
             PickScreenText(),
+            SiblingTestAction(),
             DrawableAction(),
             WaitAppAction(),
             SelectTextAction(),

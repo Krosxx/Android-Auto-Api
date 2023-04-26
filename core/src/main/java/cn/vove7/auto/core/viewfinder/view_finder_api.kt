@@ -9,6 +9,7 @@ import androidx.annotation.RequiresApi
 import cn.vove7.auto.core.utils.times
 import cn.vove7.auto.core.viewfinder.*
 import cn.vove7.auto.core.viewnode.ViewNode
+import timber.log.Timber
 
 /**
  * # apis
@@ -105,17 +106,17 @@ private fun ViewNode?.printWithChild(
     includeInvisible: Boolean
 ) {
     if (this == null) {
-        Log.d("ViewNode", "*" * dep + "[$index] null")
+        Timber.tag("ViewNode").d("*" * dep + "[" + index + "] null")
         return
     }
     if (!includeInvisible && !isVisibleToUser) {
-        Log.w("ViewNode", "*" * dep + "[$index] " + "InVisible")
+        Timber.tag("ViewNode").w("*" * dep + "[" + index + "] " + "InVisible")
         return
     }
     if (isVisibleToUser) {
-        Log.d("ViewNode", "*" * dep + "[$index] " + toString())
+        Timber.tag("ViewNode").d("*" * dep + "[" + index + "] " + toString())
     } else {
-        Log.w("ViewNode", "*" * dep + "[$index] " + toString())
+        Timber.tag("ViewNode").w("*" * dep + "[" + index + "] " + toString())
     }
     children.forEachIndexed { i, it ->
         it.printWithChild(i, dep + 1, includeInvisible)

@@ -104,6 +104,16 @@ class ViewNode(
     override val parent: ViewNode?
         get() = if (buildWithChildren) null else node.parent?.let { ViewNode(it) }
 
+    override val previousSibling: ViewNode?
+        get() = parent?.children?.let { parChildren ->
+            parChildren.getOrNull(parChildren.indexOf(this) - 1)
+        }
+
+    override val nextSibling: ViewNode?
+        get() = parent?.children?.let { parChildren ->
+            parChildren.getOrNull(parChildren.indexOf(this) + 1)
+        }
+
     override fun tryClick(): Boolean {
         return tryOp(AccessibilityNodeInfo.ACTION_CLICK)
     }
@@ -410,4 +420,13 @@ class ViewNode(
     override fun sendImeAction(): Boolean {
         return node.performAction(android.R.id.accessibilityActionImeEnter)
     }
+
+    override fun equals(other: Any?): Boolean {
+        return if (other is ViewNode) {
+            node == other.node
+        } else false
+    }
+
+    override fun hashCode() = node.hashCode()
+
 }
