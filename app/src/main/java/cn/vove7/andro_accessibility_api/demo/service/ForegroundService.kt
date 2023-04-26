@@ -8,9 +8,8 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import cn.vove7.andro_accessibility_api.api.back
+import cn.vove7.auto.core.api.back
 import cn.vove7.andro_accessibility_api.api.printLayoutInfo
-import cn.vove7.andro_accessibility_api.api.requireBaseAccessibility
 import cn.vove7.andro_accessibility_api.demo.R
 import cn.vove7.andro_accessibility_api.demo.launchWithExpHandler
 import kotlinx.coroutines.delay
@@ -73,7 +72,6 @@ class ForegroundService : Service() {
         when (action) {
             ACTION_PRINT_LAYOUT -> {
                 launchWithExpHandler {
-                    requireBaseAccessibility()
                     back()
                     delay(1000)
                     printLayoutInfo()

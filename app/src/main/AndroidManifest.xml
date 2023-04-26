@@ -6,6 +6,12 @@
     <queries>
         <package android:name="com.android.chrome" />
     </queries>
+    <instrumentation
+        android:name=".MyInstrumentation"
+        android:targetPackage="${applicationId}" />
+    <instrumentation
+        android:name="cn.vove7.accessibility.uiauto.AutoInstrumentation"
+        android:targetPackage="${applicationId}" />
     <application
         android:name=".DemoApp"
         android:allowBackup="true"
@@ -14,6 +20,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <uses-library android:name="android.test.runner" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

@@ -15,7 +15,6 @@ import kotlin.coroutines.EmptyCoroutineContext
  */
 
 
-@DelicateCoroutinesApi
 fun launchWithExpHandler(
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
@@ -25,7 +24,7 @@ fun launchWithExpHandler(
 
 val ExceptionHandler by lazy {
     CoroutineExceptionHandler { _, throwable ->
-        toast(throwable.message ?: "$throwable")
+        toast("执行失败： ${throwable.message ?: "$throwable"}")
         throwable.printStackTrace()
     }
 }

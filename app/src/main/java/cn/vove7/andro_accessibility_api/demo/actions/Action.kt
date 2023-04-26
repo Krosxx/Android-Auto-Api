@@ -1,6 +1,6 @@
 package cn.vove7.andro_accessibility_api.demo.actions
 
-import android.app.Activity
+import androidx.activity.ComponentActivity
 
 /**
  * # Action
@@ -10,7 +10,7 @@ import android.app.Activity
  */
 abstract class Action {
     abstract val name: String
-    abstract suspend fun run(act: Activity)
+    abstract suspend fun run(act: ComponentActivity)
 
     override fun toString() = name
 

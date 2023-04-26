@@ -1,19 +1,33 @@
+@file:Suppress("unused")
+
 package cn.vove7.andro_accessibility_api
 
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.GestureDescription
 import android.annotation.SuppressLint
 import android.content.Context
-import android.view.View
+import android.graphics.Bitmap
+import android.os.Build
+import android.os.Handler
+import android.util.SparseArray
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
-import cn.vove7.andro_accessibility_api.api.BaseServiceApi
-import cn.vove7.andro_accessibility_api.utils.NeedAccessibilityException
-import cn.vove7.andro_accessibility_api.utils.jumpAccessibilityServiceSettings
-import cn.vove7.andro_accessibility_api.utils.whileWaitTime
-import cn.vove7.andro_accessibility_api.viewnode.ViewNode
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import android.view.accessibility.AccessibilityWindowInfo
+import androidx.annotation.RequiresApi
+import cn.vove7.auto.core.AppScope
+import cn.vove7.auto.core.AutoApi
+import cn.vove7.auto.core.OnPageUpdate
+import cn.vove7.auto.core.PageUpdateMonitor
+import cn.vove7.auto.core.utils.AutoGestureDescription
+import cn.vove7.auto.core.utils.convert
+import cn.vove7.auto.core.utils.jumpAccessibilityServiceSettings
+import cn.vove7.auto.core.utils.whileWaitTime
+import kotlinx.coroutines.runBlocking
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlin.math.min
+import cn.vove7.auto.core.utils.GestureResultCallback as GestureCallback
 
 /**
  *
@@ -21,19 +35,17 @@ import kotlin.math.min
  * Created by Vove on 2018/6/18
  */
 @Suppress("MemberVisibilityCanBePrivate")
-abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
-    // implement of BaseServiceApi
-    override val _baseService: AccessibilityService get() = this
+abstract class AccessibilityApi : AccessibilityService(), AutoApi {
 
-    abstract val enableListenAppScope: Boolean
+    abstract val enableListenPageUpdate: Boolean
 
-    var currentScope: AppScope? = null
-        private set
+    override fun performAction(action: Int) = this.performGlobalAction(action)
+    override fun rootInActiveWindow() = rootInActiveWindow
 
-    // activity or dialog
-    var currentPage: String? = null
-        private set
-        get() = currentScope?.packageName
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    override fun windows(): List<AccessibilityWindowInfo>? = windows
+
+    private val pageListener: OnPageUpdate = ::onPageUpdate
 
     override fun onServiceConnected() {
         if (this::class.java == BASE_SERVICE_CLS) {
@@ -42,10 +54,14 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
         if (isEnableGestureService() && this::class.java == GESTURE_SERVICE_CLS) {
             gestureService = this
         }
+        registerImpl()
+        PageUpdateMonitor.enableListenPageUpdate = enableListenPageUpdate
+        PageUpdateMonitor.addOnPageUpdateListener(pageListener)
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        PageUpdateMonitor.removeOnPageUpdateListener(pageListener)
         if (this::class.java == BASE_SERVICE_CLS) {
             baseService = null
         }
@@ -53,14 +69,6 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
             gestureService = null
         }
     }
-
-    /**
-     * ViewNode with rootInActiveWindow
-     */
-    val activeWinNode: ViewNode? get() = ViewNode.activeWinNode()
-
-    // 适应 多窗口 分屏
-    val rootNodeOfAllWindows get() = ViewNode.getRoot()
 
     override fun getRootInActiveWindow(): AccessibilityNodeInfo? {
         return try {
@@ -72,60 +80,39 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
     }
 
     /**
-     * 更新当前[currentScope]
-     * @param pkg String
-     * @param pageName String Activity or Dialog
-     */
-    private fun updateCurrentApp(pkg: String, pageName: String) {
-        if (currentScope?.packageName == pkg && pageName == currentScope?.pageName) {
-            return
-        }
-        if (
-            pageName.startsWith("android.widget") ||
-            pageName.startsWith("android.view") ||
-            pageName.startsWith("android.inputmethodservice") ||
-            pageIsView(pageName)
-        ) {
-            return
-        }
-
-        currentScope = currentScope?.also {
-            it.pageName = pageName
-            it.packageName = pkg
-        } ?: AppScope(pkg, pageName)
-
-        onPageUpdate(currentScope!!)
-    }
-
-    /**
      * Activity or Dialog update
      * @param currentScope AppScope
      */
     open fun onPageUpdate(currentScope: AppScope) {}
 
-    private fun pageIsView(pageName: String): Boolean = try {
-        View::class.java.isAssignableFrom(Class.forName(pageName))
-    } catch (e: ClassNotFoundException) {
-        false
-    }
-
     /**
      * @param event AccessibilityEvent?
      */
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (!enableListenAppScope) return
-        event ?: return
+        if (!enableListenPageUpdate || event == null) return
+        PageUpdateMonitor.onAccessibilityEvent(event)
+    }
 
-        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            // 界面切换
-            val classNameStr = event.className
-            val pkg = event.packageName as String?
-            if (!classNameStr.isNullOrBlank() && pkg != null) {
-                GlobalScope.launch {
-                    updateCurrentApp(pkg, classNameStr.toString())
+    override fun takeScreenshot(): Bitmap? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            return runBlocking {
+                suspendCoroutine<Bitmap> { cont ->
+                    super.takeScreenshot(0, appCtx.mainExecutor, object : TakeScreenshotCallback {
+                        override fun onSuccess(screenshot: ScreenshotResult) {
+                            val bitmap = Bitmap.wrapHardwareBuffer(screenshot.hardwareBuffer, screenshot.colorSpace)
+                            if (bitmap != null) {
+                                cont.resume(bitmap)
+                            }
+                        }
+
+                        override fun onFailure(errorCode: Int) {
+                            cont.resumeWithException(RuntimeException("takeScreenshot failed, code: $errorCode"))
+                        }
+                    })
                 }
             }
         }
+        return null
     }
 
     override fun onInterrupt() {
@@ -177,7 +164,7 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
             }
 
         // currentAppScope
-        val currentScope get() = baseService?.currentScope
+        val currentScope get() = AutoApi.currentScope
 
         // Service is enable
         val isBaseServiceEnable: Boolean
@@ -229,4 +216,61 @@ abstract class AccessibilityApi : AccessibilityService(), BaseServiceApi {
 
     }
 
+    override suspend fun doGesturesAsync(gesture: AutoGestureDescription, callback: GestureCallback?, handler: Handler?) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            throw IllegalStateException("dispatchGesture require android N+")
+        }
+        requireGesture.dispatchGesture(gesture.convert(), callback?.let { cb ->
+            @RequiresApi(Build.VERSION_CODES.N)
+            object : GestureResultCallback() {
+                override fun onCompleted(gestureDescription: GestureDescription?) {
+                    cb.onCompleted(gesture)
+                }
+
+                override fun onCancelled(gestureDescription: GestureDescription?) {
+                    cb.onCancelled(gesture)
+                }
+            }
+        }, handler)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    override fun windowsOnAllDisplays(): SparseArray<List<AccessibilityWindowInfo>> {
+        return requireBase.windowsOnAllDisplays
+    }
 }
+
+
+fun requireBaseAccessibility(autoJump: Boolean = false) {
+    AccessibilityApi.requireBaseAccessibility(autoJump)
+}
+
+suspend fun waitBaseAccessibility(waitMillis: Long = 30000) {
+    AccessibilityApi.waitAccessibility(waitMillis, AccessibilityApi.BASE_SERVICE_CLS)
+}
+
+fun requireGestureAccessibility(autoJump: Boolean = false) {
+    AccessibilityApi.requireGestureAccessibility(autoJump)
+}
+
+suspend fun waitGestureAccessibility(waitMillis: Long = 30000) {
+    AccessibilityApi.waitAccessibility(waitMillis, AccessibilityApi.GESTURE_SERVICE_CLS)
+}
+
+suspend fun waitAccessibility(waitMillis: Long = 30000, cls: Class<*>): Boolean {
+    return AccessibilityApi.waitAccessibility(waitMillis, cls)
+}
+
+
+/**
+ * 无障碍服务未运行异常
+ * @constructor
+ */
+open class NeedAccessibilityException(name: String?) : RuntimeException("无障碍服务未运行: $name")
+
+class NeedBaseAccessibilityException :
+    NeedAccessibilityException(AccessibilityApi.BASE_SERVICE_CLS.name)
+
+class NeedGestureAccessibilityException :
+    NeedAccessibilityException(AccessibilityApi.GESTURE_SERVICE_CLS.name)
+

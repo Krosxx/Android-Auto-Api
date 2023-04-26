@@ -1,19 +1,27 @@
 package cn.vove7.andro_accessibility_api.demo
 
-import android.app.Activity
-import android.os.Build
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.widget.ArrayAdapter
-import android.widget.ListView
+import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
+import cn.vove7.andro_accessibility_api.AccessibilityApi
 import cn.vove7.andro_accessibility_api.demo.actions.*
-import kotlinx.coroutines.Dispatchers
+import cn.vove7.andro_accessibility_api.demo.databinding.ActivityMainBinding
+import cn.vove7.auto.core.AutoApi
+import cn.vove7.auto.core.utils.jumpAccessibilityServiceSettings
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 
 class MainActivity : AppCompatActivity() {
+
+    private val binding by lazy {
+        ActivityMainBinding.inflate(layoutInflater)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(binding.root)
 
         val actions = mutableListOf(
             BaseNavigatorAction(),
@@ -28,21 +36,44 @@ class MainActivity : AppCompatActivity() {
             SmartFinderAction(),
             CoroutineStopAction(),
             ToStringTestAction(),
+            InstrumentationSendKeyAction(),
+            InstrumentationSendTextAction(),
+            InstrumentationInjectInputEventAction(),
+            InstrumentationShotScreenAction(),
+            SendImeAction(),
+            ContinueGestureAction(),
             object : Action() {
                 override val name = "Stop"
-                override suspend fun run(act: Activity) {}
+                override suspend fun run(act: ComponentActivity) {
+                    actionJob?.cancel()
+                }
             }
         )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            actions.add(SendImeAction())
-        }
 
-        val lv = findViewById<ListView>(R.id.list_view)
-
-        lv.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, actions)
-        lv.setOnItemClickListener { _, _, position, _ ->
+        binding.listView.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, actions)
+        binding.listView.setOnItemClickListener { _, _, position, _ ->
             onActionClick(actions[position])
         }
+        binding.acsCb.setOnCheckedChangeListener { buttonView, isChecked ->
+            if (isChecked && !AccessibilityApi.isServiceEnable) {
+                buttonView.isChecked = false
+                jumpAccessibilityServiceSettings(AccessibilityApi.BASE_SERVICE_CLS)
+            }
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    override fun onResume() {
+        super.onResume()
+        binding.acsCb.isChecked = AccessibilityApi.isServiceEnable
+
+        binding.workMode.text = "工作模式：${
+            mapOf(
+                AutoApi.SERVICE_TYPE_NONE to "无",
+                AutoApi.SERVICE_TYPE_ACCESSIBILITY to "无障碍",
+                AutoApi.SERVICE_TYPE_INSTRUMENTATION to "Instrumentation",
+            )[AutoApi.serviceType]
+        } "
     }
 
     var actionJob: Job? = null
@@ -60,7 +91,11 @@ class MainActivity : AppCompatActivity() {
             action.run(this@MainActivity)
         }
         actionJob?.invokeOnCompletion {
-            toast("执行结束")
+            if (it is CancellationException) {
+                toast("取消执行")
+            } else if (it == null) {
+                toast("执行结束")
+            }
         }
     }
 

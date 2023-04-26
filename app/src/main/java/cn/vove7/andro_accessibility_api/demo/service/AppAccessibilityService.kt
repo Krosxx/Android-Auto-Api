@@ -2,7 +2,7 @@ package cn.vove7.andro_accessibility_api.demo.service
 
 import android.util.Log
 import cn.vove7.andro_accessibility_api.AccessibilityApi
-import cn.vove7.andro_accessibility_api.AppScope
+import cn.vove7.auto.core.AppScope
 
 /**
  * # MyAccessibilityService
@@ -13,7 +13,7 @@ import cn.vove7.andro_accessibility_api.AppScope
 class AppAccessibilityService : AccessibilityApi() {
 
     //启用 页面更新 回调
-    override val enableListenAppScope: Boolean = true
+    override val enableListenPageUpdate: Boolean = true
 
     override fun onCreate() {
         //must set
@@ -35,4 +35,5 @@ class AppAccessibilityService : AccessibilityApi() {
     companion object {
         private const val TAG = "MyAccessibilityService"
     }
+
 }
