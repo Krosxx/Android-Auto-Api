@@ -17,7 +17,6 @@ import android.widget.SeekBar
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
-import cn.vove7.andro_accessibility_api.api.*
 import cn.vove7.andro_accessibility_api.demo.*
 import cn.vove7.auto.core.AutoApi
 import cn.vove7.auto.core.api.*
@@ -26,7 +25,6 @@ import cn.vove7.auto.core.utils.AdapterRectF
 import cn.vove7.auto.core.utils.AutoGestureDescription
 import cn.vove7.auto.core.utils.GestureResultCallback
 import cn.vove7.auto.core.viewfinder.*
-import cn.vove7.auto.core.viewnode.ViewNode
 import kotlinx.coroutines.*
 import timber.log.Timber
 import kotlin.coroutines.coroutineContext

@@ -1,9 +1,8 @@
 @file:Suppress("unused")
 
-package cn.vove7.andro_accessibility_api.api
+package cn.vove7.auto.core.api
 
 import android.os.Build
-import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
 import cn.vove7.auto.core.utils.times
