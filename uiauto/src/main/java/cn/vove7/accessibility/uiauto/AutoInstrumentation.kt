@@ -1,12 +1,9 @@
 package cn.vove7.accessibility.uiauto
 
 import android.accessibilityservice.AccessibilityServiceInfo
-import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.Instrumentation
 import android.app.UiAutomation
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
 import android.hardware.display.DisplayManager
 import android.os.*
@@ -73,8 +70,12 @@ open class AutoInstrumentation : Instrumentation(), AutoApi {
             AccessibilityServiceInfo.FLAG_REQUEST_ENHANCED_WEB_ACCESSIBILITY
         si.feedbackType = AccessibilityServiceInfo.FEEDBACK_ALL_MASK
         si.packageNames = null
+        onBuildServiceInfo(si)
         Timber.i("uiAutomation.serviceInfo: $si")
         uiAutomation.serviceInfo = si
+    }
+
+    open fun onBuildServiceInfo(serviceInfo: AccessibilityServiceInfo) {
     }
 
     @CallSuper
