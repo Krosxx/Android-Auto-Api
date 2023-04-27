@@ -1,5 +1,7 @@
 # Android-Accessibility-Api
 
+[![](https://jitpack.io/v/Vove7/Android-Accessibility-Api.svg)](https://jitpack.io/#Vove7/Android-Accessibility-Api)
+
 中文 | [English](ReadMe_EN.md)
 
 > 安卓无障碍服务Api, 为了简化无障碍服务使用，并使用 Kotlin 以提供简洁的Api。
