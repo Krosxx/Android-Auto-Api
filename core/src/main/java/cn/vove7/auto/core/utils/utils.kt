@@ -13,6 +13,8 @@ import androidx.annotation.RequiresApi
 import cn.vove7.auto.core.AutoApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import org.lsposed.hiddenapibypass.HiddenApiBypass
+import timber.log.Timber
 import java.util.*
 import kotlin.coroutines.coroutineContext
 import kotlin.math.max
@@ -131,10 +133,20 @@ fun getApplication(): Context {
     return getApplication.invoke(activityThread) as Context
 }
 
+private val bypassHiddenApi by lazy {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        HiddenApiBypass.addHiddenApiExemptions(
+            "Landroid/accessibilityservice/GestureDescription\$StrokeDescription", // one specific class
+        ).also {
+            Timber.d("HiddenApiBypass: $it")
+        }
+    }
+}
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun AutoGestureDescription.convert(): GestureDescription {
     val autoDesc = this
+    bypassHiddenApi.toString()
     return GestureDescription.Builder()
         .apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
