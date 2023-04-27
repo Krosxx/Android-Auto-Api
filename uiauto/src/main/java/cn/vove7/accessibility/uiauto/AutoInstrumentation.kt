@@ -32,7 +32,6 @@ import java.util.concurrent.atomic.AtomicInteger
  * @date 2023/4/25
  */
 @Suppress("unused")
-@Keep
 open class AutoInstrumentation : Instrumentation(), AutoApi {
 
     open val enableListenPageUpdate: Boolean = true

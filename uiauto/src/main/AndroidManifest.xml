@@ -4,8 +4,4 @@
     <application>
         <uses-library android:name="android.test.runner" />
     </application>
-
-    <instrumentation
-        android:name=".AutoInstrumentation"
-        android:targetPackage="${applicationId}" />
 </manifest>
