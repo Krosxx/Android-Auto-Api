@@ -67,6 +67,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         binding.acsCb.isChecked = AccessibilityApi.isServiceEnable
+        binding.acsCb.isEnabled = AutoApi.serviceType != AutoApi.SERVICE_TYPE_INSTRUMENTATION
 
         binding.workMode.text = "工作模式：${
             mapOf(

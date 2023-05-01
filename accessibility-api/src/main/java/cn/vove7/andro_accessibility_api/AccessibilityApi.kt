@@ -61,6 +61,7 @@ abstract class AccessibilityApi : AccessibilityService(), AutoApi {
 
     override fun onDestroy() {
         super.onDestroy()
+        AutoApi.clearImpl()
         PageUpdateMonitor.removeOnPageUpdateListener(pageListener)
         if (this::class.java == BASE_SERVICE_CLS) {
             baseService = null

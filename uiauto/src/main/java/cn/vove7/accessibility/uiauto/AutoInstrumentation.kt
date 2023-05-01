@@ -13,7 +13,6 @@ import android.view.accessibility.AccessibilityEvent.TYPE_WINDOWS_CHANGED
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
 import androidx.annotation.CallSuper
-import androidx.annotation.Keep
 import androidx.annotation.RequiresApi
 import cn.vove7.auto.core.AppScope
 import cn.vove7.auto.core.AutoApi
@@ -94,6 +93,17 @@ open class AutoInstrumentation : Instrumentation(), AutoApi {
 
     open fun onPageUpdate(currentScope: AppScope) {}
 
+    override fun isServiceEnabled(): Boolean {
+        kotlin.runCatching {
+            if(!uiAutomation.injectInputEvent(MotionEvent.obtain(0, 0, 0, 0f, 0f, 0), false)){
+                return false
+            }
+        }.onFailure {
+            Timber.w(it)
+            return false
+        }
+        return super.isServiceEnabled()
+    }
 
     override fun rootInActiveWindow(): AccessibilityNodeInfo? = uiAutomation.rootInActiveWindow
 

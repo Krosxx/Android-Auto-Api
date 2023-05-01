@@ -1,10 +1,8 @@
 package cn.vove7.auto.core
 
 import android.accessibilityservice.AccessibilityService
-import android.app.Activity
 import android.app.Instrumentation
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Build
 import android.os.Handler
@@ -29,7 +27,12 @@ import java.lang.reflect.Proxy
 fun requireAutoService() = requireImpl()
 
 fun requireImpl(): AutoApi {
-    return AutoApi.AutoImpl ?: throw AutoServiceUnavailableException()
+    return AutoApi.AutoImpl?.also {
+        if (!it.isServiceEnabled()) { // check
+            AutoApi.clearImpl()
+            throw AutoServiceUnavailableException()
+        }
+    } ?: throw AutoServiceUnavailableException()
 }
 
 fun buildProxy(): AutoApi =
@@ -53,8 +56,6 @@ interface AutoApi {
             getApplication()
         }
 
-        fun isServiceEnabled() = AutoImpl != null
-
         val serviceType: Int
             get() = when {
                 AutoImpl is AccessibilityService -> SERVICE_TYPE_ACCESSIBILITY
@@ -75,6 +76,8 @@ interface AutoApi {
         const val SERVICE_TYPE_INSTRUMENTATION = 2
 
     }
+
+    fun isServiceEnabled() = AutoImpl != null
 
     fun rootInActiveWindow(): AccessibilityNodeInfo?
 
