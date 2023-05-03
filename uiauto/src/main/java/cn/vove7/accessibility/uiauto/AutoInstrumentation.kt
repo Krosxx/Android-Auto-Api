@@ -93,7 +93,7 @@ open class AutoInstrumentation : Instrumentation(), AutoApi {
 
     open fun onPageUpdate(currentScope: AppScope) {}
 
-    override fun isServiceEnabled(): Boolean {
+    override fun isEnabled(): Boolean {
         kotlin.runCatching {
             if(!uiAutomation.injectInputEvent(MotionEvent.obtain(0, 0, 0, 0f, 0f, 0), false)){
                 return false
@@ -102,7 +102,7 @@ open class AutoInstrumentation : Instrumentation(), AutoApi {
             Timber.w(it)
             return false
         }
-        return super.isServiceEnabled()
+        return super.isEnabled()
     }
 
     override fun rootInActiveWindow(): AccessibilityNodeInfo? = uiAutomation.rootInActiveWindow

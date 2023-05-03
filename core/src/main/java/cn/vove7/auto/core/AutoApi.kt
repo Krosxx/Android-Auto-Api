@@ -28,7 +28,7 @@ fun requireAutoService() = requireImpl()
 
 fun requireImpl(): AutoApi {
     return AutoApi.AutoImpl?.also {
-        if (!it.isServiceEnabled()) { // check
+        if (!it.isEnabled()) { // check
             AutoApi.clearImpl()
             throw AutoServiceUnavailableException()
         }
@@ -63,6 +63,8 @@ interface AutoApi {
                 else -> SERVICE_TYPE_NONE
             }
 
+        fun isServiceEnabled(): Boolean = AutoImpl?.isEnabled() ?: false
+
         fun setImpl(impl: AutoApi) {
             AutoImpl = impl
         }
@@ -77,7 +79,7 @@ interface AutoApi {
 
     }
 
-    fun isServiceEnabled() = AutoImpl != null
+    fun isEnabled() = AutoImpl != null
 
     fun rootInActiveWindow(): AccessibilityNodeInfo?
 
