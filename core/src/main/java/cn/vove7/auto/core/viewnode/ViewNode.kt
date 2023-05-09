@@ -371,13 +371,19 @@ class ViewNode(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && hintText != null) append(", hintText: $hintText")
             if (desc != null) append(", desc: $desc")
             append(", bounds: $bounds, childCount: $childCount")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 && node.isEditable)
+                append(", Editable")
             if (node.isClickable) append(", Clickable")
             if (node.isSelected) append(", Selected")
-            if (!node.isVisibleToUser) append(", InVisibleToUser")
+            if (!node.isVisibleToUser) append(", InVisible")
             if (!node.isEnabled) append(", Disabled")
             if (node.isPassword) append(", Password")
             if (node.isChecked) append(", Checked")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && node.isDismissable) append(", Dismissable")
+            if (node.isFocused) append(", Focused")
+            if (node.isScrollable) append(", Scrollable")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && node.isDismissable)
+                append(", Dismissable")
+            append(" }")
         }
     }
 
