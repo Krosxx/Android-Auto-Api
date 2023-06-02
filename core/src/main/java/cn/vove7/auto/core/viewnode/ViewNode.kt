@@ -43,7 +43,9 @@ class ViewNode(
         private fun rootNodesOfAllWindows(): ViewChildList =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 ViewChildList().also { list ->
-                    AutoApi.windows()?.forEach { win ->
+                    AutoApi.windows()?.sortedByDescending {
+                        if (it.isActive) Int.MAX_VALUE else it.layer
+                    }?.forEach { win ->
                         list.add(
                             win.root?.let { r -> ViewNode(r.also(AccessibilityNodeInfo::refresh)) }
                         )
