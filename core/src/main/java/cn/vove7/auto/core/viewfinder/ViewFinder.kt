@@ -1,11 +1,12 @@
 package cn.vove7.auto.core.viewfinder
 
-import android.view.accessibility.AccessibilityNodeInfo
 import cn.vove7.auto.core.utils.ViewNodeNotFoundException
 import cn.vove7.auto.core.utils.ensureActive
+import cn.vove7.auto.core.utils.ensureNotInterrupt
 import cn.vove7.auto.core.utils.whileWaitTime
 import cn.vove7.auto.core.viewfinder.FinderBuilderWithOperation.Companion.WAIT_MILLIS
 import cn.vove7.auto.core.viewnode.ViewNode
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 
 /**
@@ -18,11 +19,6 @@ abstract class ViewFinder<T : ViewFinder<T>>(
 ) {
 
     companion object {
-        //Maximum layout recursion depth; in rare cases, there will be a layout wireless loop to prevent function stack overflow
-        //最大布局递归深度；极少情况会出现布局无线循环，用来防止函数栈溢出
-        var MAX_DEPTH = 50
-
-        val ROOT_NODE: ViewNode get() = ViewNode.getRoot()
 
         /**
          * 使用深度搜索
@@ -45,11 +41,11 @@ abstract class ViewFinder<T : ViewFinder<T>>(
             return p
         }
 
-        suspend fun findByDepths(vararg depths: Int) = findByDepths(depths, ROOT_NODE)
+        suspend fun findByDepths(vararg depths: Int) = findByDepths(depths, ViewNode.getRoot())
     }
 
     val startNode: ViewNode
-        get() = node ?: ROOT_NODE
+        get() = node ?: ViewNode.getRoot()
 
     /**
      * 等待搜索，在指定时间内循环搜索（视图更新），超时返回null
@@ -83,13 +79,24 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         return findFirst(includeInvisible) ?: throw ViewNodeNotFoundException(this)
     }
 
+    @Throws(ViewNodeNotFoundException::class)
+    fun requireFirstBlocking(includeInvisible: Boolean = false): ViewNode {
+        return findFirstBlocking(includeInvisible) ?: throw ViewNodeNotFoundException(this)
+    }
+
+
     /**
      * @param includeInvisible Boolean 是否包含不可见元素
      * @return ViewNode?
      */
     suspend fun findFirst(includeInvisible: Boolean = false): ViewNode? {
-        //不可见
+        // 不可见
         return traverseAllNode(startNode, includeInvisible = includeInvisible)
+    }
+
+    @Throws(CancellationException::class)
+    fun findFirstBlocking(includeInvisible: Boolean = false): ViewNode? {
+        return traverseAllNodeBlocking(startNode, includeInvisible = includeInvisible)
     }
 
     /**
@@ -145,13 +152,13 @@ abstract class ViewFinder<T : ViewFinder<T>>(
      */
     private suspend fun traverseAllNode(
         node: ViewNode?, list: MutableList<ViewNode>? = null,
-        includeInvisible: Boolean = false, depth: Int = 0
+        includeInvisible: Boolean = false, depth: Int = 0,
+        nodeSet: MutableSet<AcsNode> = mutableSetOf()
     ): ViewNode? {
         ensureActive()
         node ?: return null
-        if (depth > MAX_DEPTH) {//防止出现无限递归（eg:QQ浏览器首页）
-            return null
-        }
+        if (node.node in nodeSet) return null
+        nodeSet.add(node.node)
         node.children.forEach { childNode ->
             ensureActive()
             if (childNode == null) {
@@ -173,6 +180,37 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         return null
     }
 
+    private fun traverseAllNodeBlocking(
+        node: ViewNode?, list: MutableList<ViewNode>? = null,
+        includeInvisible: Boolean = false, depth: Int = 0,
+        nodeSet: MutableSet<AcsNode> = mutableSetOf()
+    ): ViewNode? {
+        ensureNotInterrupt()
+        node ?: return null
+        if (node.node in nodeSet) return null
+        nodeSet.add(node.node)
+        node.children.forEach { childNode ->
+            ensureNotInterrupt()
+            if (childNode == null) {
+                return@forEach
+            }
+            if (!includeInvisible && !childNode.isVisibleToUser) {
+                return@forEach
+            }
+            if (findCondition(childNode.node)) {
+                if (list != null) {
+                    list.add(childNode)
+                } else return childNode
+            }
+            val r = traverseAllNodeBlocking(childNode,
+                list, includeInvisible, depth + 1, nodeSet)
+            if (list == null && r != null) {
+                return r
+            }
+        }
+        return null
+    }
+
     /**
      * 等待消失  常用于加载View的消失
      * @return Boolean false 超时 true 消失
@@ -181,10 +219,10 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         return whileWaitTime(waitMs.toLong(), interval) {
             if (findFirst() != null) {
                 null
-            }//显示，继续等待
+            }// 显示，继续等待
             else {
                 true
-            } //消失
+            } // 消失
         } ?: false
     }
 
@@ -195,7 +233,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
     /**
      * 查找条件
      */
-    abstract fun findCondition(node: AccessibilityNodeInfo): Boolean
+    abstract fun findCondition(node: AcsNode): Boolean
 
     abstract fun finderInfo(): String
 }

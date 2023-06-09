@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * # AutoInstrumentation
  *
- * @author Libra
+ * @author Vove
  * @date 2023/4/25
  */
 @Suppress("unused")
@@ -78,9 +78,9 @@ open class AutoInstrumentation : Instrumentation(), AutoApi {
 
     @CallSuper
     override fun onStart() {
+        initServiceInfo()
         registerImpl()
         initPageListener()
-        initServiceInfo()
 
         Timber.i("AutoInstrumentation started.")
 

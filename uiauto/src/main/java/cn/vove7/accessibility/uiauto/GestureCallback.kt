@@ -5,7 +5,7 @@ import android.os.RemoteException
 /**
  * # GestureCallback
  *
- * @author Libra
+ * @author Vove
  * @date 2023/4/26
  */
 fun interface GestureCallback {

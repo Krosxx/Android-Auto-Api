@@ -3,25 +3,25 @@
 package cn.vove7.auto.core.viewfinder
 
 import android.os.Build
-import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import cn.vove7.auto.core.utils.compareSimilarity
 
 /**
  * # SmartFinderConditions
  *
- * @author Libra
+ * @author Vove
  * @date 2022/2/15
  */
 
-typealias AcsNode = AccessibilityNodeInfo
+typealias AcsNode = AccessibilityNodeInfoCompat
 
 private fun requireNotEmpty(list: Array<*>) {
     if (list.isEmpty()) throw IllegalStateException("requireNotEmpty")
 }
 
 class IdCondition(private val targetId: String) : MatchCondition {
-    override fun invoke(node: AccessibilityNodeInfo): Boolean {
+    override fun invoke(node: AcsNode): Boolean {
         val vid = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
             node.viewIdResourceName ?: return false
         } else {
@@ -35,6 +35,33 @@ class IdCondition(private val targetId: String) : MatchCondition {
 
 fun ConditionGroup.id(id: String) = link(IdCondition(id))
 fun id(id: String) = IdCondition(id)
+
+class IdSCondition(private val targetIds: Array<out String>) : MatchCondition {
+    override fun invoke(node: AcsNode): Boolean {
+        val vid = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            node.viewIdResourceName ?: return false
+        } else {
+            return false
+        }
+        return targetIds.any { id ->
+            vid.endsWith("/$id", true) || vid.equals(id, true)
+        }
+    }
+
+    override fun toString() = "ID in ${targetIds.contentToString()}"
+}
+
+fun ConditionGroup.ids(vararg id: String) = link(IdSCondition(id))
+
+
+class PackageCondition(private val names: Array<out CharSequence>) : MatchCondition {
+    override fun invoke(node: AcsNode): Boolean {
+        return node.packageName in names
+    }
+}
+
+fun ConditionGroup.packageName(vararg packageNames: CharSequence) = link(PackageCondition(packageNames))
+
 
 class TextEqCondition(private val texts: Array<out String>) : MatchCondition {
     init {
@@ -112,7 +139,7 @@ class SimilarityTextCondition(
     private val text: String,
     private val limit: Float
 ) : MatchCondition {
-    override fun invoke(node: AccessibilityNodeInfo): Boolean {
+    override fun invoke(node: AcsNode): Boolean {
         return compareSimilarity(node.text?.toString() ?: "", text) >= limit
     }
 
@@ -128,7 +155,7 @@ class SimilarityDescCondition(
     private val text: String,
     private val limit: Float
 ) : MatchCondition {
-    override fun invoke(node: AccessibilityNodeInfo): Boolean {
+    override fun invoke(node: AcsNode): Boolean {
         return compareSimilarity(node.contentDescription?.toString() ?: "", text) >= limit
     }
 
@@ -366,7 +393,7 @@ fun ConditionGroup.selected(b: Boolean = true) = link(SelectedCondition(b))
 fun selected(b: Boolean = true) = SelectedCondition(b)
 
 //
-//class CCondition(private val b: Boolean) : MatchCondition {
+// class CCondition(private val b: Boolean) : MatchCondition {
 //    override fun invoke(node: AcsNode): Boolean {
 //
 //        node.className

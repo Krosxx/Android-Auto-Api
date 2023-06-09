@@ -12,7 +12,7 @@ import cn.vove7.auto.core.AutoApi
 /**
  * # ScreenAdapter
  *
- * @author 17719247306
+ * @author Vove
  * 2018/9/6
  */
 object ScreenAdapter {

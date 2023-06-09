@@ -8,9 +8,11 @@ import android.view.ViewConfiguration
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
 import cn.vove7.auto.core.AutoApi
 import cn.vove7.auto.core.utils.ScreenAdapter
 import cn.vove7.auto.core.utils.ViewChildList
+import cn.vove7.auto.core.viewfinder.AcsNode
 import cn.vove7.auto.core.viewfinder.SmartFinder
 import kotlinx.coroutines.runBlocking
 import java.lang.Thread.sleep
@@ -20,11 +22,17 @@ import java.lang.Thread.sleep
  * @property node 无障碍视图节点
  */
 @Suppress("MemberVisibilityCanBePrivate")
-class ViewNode(
-    val node: AccessibilityNodeInfo
-) : ViewOperation, Comparable<ViewNode> {
+class ViewNode : ViewOperation, Comparable<ViewNode> {
+    val node: AcsNode
 
-    val nodeWrapper = AccessibilityNodeInfoCompat.wrap(node)
+    constructor(node: AccessibilityNodeInfo) {
+        this.node = AcsNode.wrap(node)
+    }
+
+    constructor(node: AcsNode) {
+        this.node = node
+    }
+
 
     /**
      * 文本相似度
@@ -40,7 +48,7 @@ class ViewNode(
 
         private const val ROOT_TAG = "ViewNodeRoot"
 
-        private fun rootNodesOfAllWindows(): ViewChildList =
+        fun rootNodesOfAllWindows(): ViewChildList =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 ViewChildList().also { list ->
                     AutoApi.windows()?.sortedByDescending {
@@ -85,7 +93,11 @@ class ViewNode(
     }
 
     override val id: String
-        get() = nodeWrapper.viewIdResourceName
+        get() = node.viewIdResourceName
+
+    override val className get() = node.className?.toString()
+
+    override val packageName: String? get() = node.packageName?.toString()
 
     override val boundsInParent: Rect
         get() {
@@ -207,7 +219,6 @@ class ViewNode(
         return node.performAction(AccessibilityNodeInfo.ACTION_SELECT)
     }
 
-    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     override fun setSelection(start: Int, end: Int): Boolean {
         val args = Bundle()
         args.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, start)
@@ -257,7 +268,6 @@ class ViewNode(
             refresh()
             return node.text
         }
-        @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
         set(v) {
             val arg = Bundle()
             arg.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, v)
@@ -265,15 +275,12 @@ class ViewNode(
         }
 
     override var hintText: CharSequence?
-        @RequiresApi(Build.VERSION_CODES.O)
         get() = node.hintText
-        @RequiresApi(Build.VERSION_CODES.O)
         set(value) {
             node.hintText = value
         }
 
     override var progress: Float
-        @RequiresApi(Build.VERSION_CODES.KITKAT)
         get() = node.rangeInfo.current
         @RequiresApi(Build.VERSION_CODES.N)
         set(value) {
@@ -283,15 +290,13 @@ class ViewNode(
                 })
         }
 
-    override val rangeInfo: AccessibilityNodeInfo.RangeInfo
-        @RequiresApi(Build.VERSION_CODES.KITKAT)
+    override val rangeInfo: AccessibilityNodeInfoCompat.RangeInfoCompat
         get() = node.rangeInfo
 
     override fun desc(): String? {
         return node.contentDescription?.toString()
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun appendText(s: CharSequence) {
         text = buildString {
             append(text)
@@ -299,7 +304,6 @@ class ViewNode(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun trySetText(text: CharSequence): Boolean {
         val arg = Bundle()
         arg.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
@@ -357,24 +361,17 @@ class ViewNode(
         )
     }
 
-    override val className get() = node.className?.toString()
-
-    private fun nodeSummary(node: AccessibilityNodeInfo): String {
-        val id = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            node.viewIdResourceName
-        } else {
-            null
-        }
+    private fun nodeSummary(node: AcsNode): String {
+        val id = node.viewIdResourceName
         val desc = node.contentDescription
         return buildString {
             append("{ class: ").append(className)
             if (id != null) append(", id: ").append(id.substring(id.lastIndexOf('/') + 1))
             if (node.text != null) append(", text: ${node.text}")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && hintText != null) append(", hintText: $hintText")
+            if (hintText != null) append(", hintText: $hintText")
             if (desc != null) append(", desc: $desc")
             append(", bounds: $bounds, childCount: $childCount")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 && node.isEditable)
-                append(", Editable")
+            if (node.isEditable) append(", Editable")
             if (node.isClickable) append(", Clickable")
             if (node.isSelected) append(", Selected")
             if (!node.isVisibleToUser) append(", InVisible")
@@ -383,8 +380,7 @@ class ViewNode(
             if (node.isChecked) append(", Checked")
             if (node.isFocused) append(", Focused")
             if (node.isScrollable) append(", Scrollable")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && node.isDismissable)
-                append(", Dismissable")
+            if (node.isDismissable) append(", Dismissable")
             append(" }")
         }
     }
@@ -413,20 +409,15 @@ class ViewNode(
             childrenCache = rootNodesOfAllWindows()
             return true
         }
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            node.refresh()
-        } else {
-            false
-        }
+        return node.refresh()
     }
 
-    override val actionList: List<AccessibilityNodeInfo.AccessibilityAction>
-        @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    override val actionList: List<AccessibilityActionCompat>
         get() = node.actionList
 
     @RequiresApi(Build.VERSION_CODES.R)
     override fun sendImeAction(): Boolean {
-        return node.performAction(android.R.id.accessibilityActionImeEnter)
+        return node.performAction(AccessibilityActionCompat.ACTION_IME_ENTER.id)
     }
 
     override fun equals(other: Any?): Boolean {

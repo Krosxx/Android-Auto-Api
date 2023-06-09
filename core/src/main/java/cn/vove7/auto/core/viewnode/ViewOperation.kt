@@ -2,8 +2,8 @@ package cn.vove7.auto.core.viewnode
 
 import android.graphics.Point
 import android.graphics.Rect
-import android.view.accessibility.AccessibilityNodeInfo
-import android.view.accessibility.AccessibilityNodeInfo.RangeInfo
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
 import cn.vove7.auto.core.utils.ViewChildList
 import cn.vove7.auto.core.viewfinder.SmartFinder
 
@@ -13,6 +13,7 @@ import cn.vove7.auto.core.viewfinder.SmartFinder
 interface ViewOperation {
     val id: String?
     val className: String?
+    val packageName: String?
 
     val simpleName: String?
         get() = className?.let { it.substring(it.lastIndexOf('.') + 1) }
@@ -142,7 +143,7 @@ interface ViewOperation {
 
     var progress: Float
 
-    val rangeInfo: RangeInfo
+    val rangeInfo: AccessibilityNodeInfoCompat.RangeInfoCompat
 
     /**
      * 追加文本
@@ -186,7 +187,7 @@ interface ViewOperation {
 
     fun refresh(): Boolean
 
-    val actionList: List<AccessibilityNodeInfo.AccessibilityAction>
+    val actionList: List<AccessibilityActionCompat>
 
     fun sendImeAction(): Boolean
 

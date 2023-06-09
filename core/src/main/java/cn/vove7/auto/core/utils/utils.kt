@@ -11,6 +11,7 @@ import android.os.SystemClock
 import android.provider.Settings
 import androidx.annotation.RequiresApi
 import cn.vove7.auto.core.AutoApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import org.lsposed.hiddenapibypass.HiddenApiBypass
@@ -55,6 +56,9 @@ internal suspend inline fun ensureActive() {
     coroutineContext.ensureActive()
 }
 
+fun ensureNotInterrupt() {
+    if (Thread.interrupted()) throw CancellationException("Thread.interrupted")
+}
 
 fun jumpAccessibilityServiceSettings(
     cls: Class<*>,

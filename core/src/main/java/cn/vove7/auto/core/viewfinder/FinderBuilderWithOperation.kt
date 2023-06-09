@@ -1,8 +1,8 @@
 package cn.vove7.auto.core.viewfinder
 
 import android.os.Build
-import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import cn.vove7.auto.core.viewnode.ViewNode
 import cn.vove7.auto.core.viewnode.ViewOperation
 import kotlinx.coroutines.runBlocking
@@ -10,7 +10,7 @@ import kotlinx.coroutines.runBlocking
 /**
  * # FindBuilderWithOperation
  *
- * @author 17719
+ * @author Vove
  * 2018/8/10
  */
 
@@ -26,6 +26,7 @@ interface FinderBuilderWithOperation : ViewOperation {
 
     override val id get() = node.id
     override val className get() = node.className
+    override val packageName: String? get() = node.packageName
 
     @RequiresApi(Build.VERSION_CODES.N)
     override suspend fun globalLongClick() = node.globalLongClick()
@@ -63,7 +64,7 @@ interface FinderBuilderWithOperation : ViewOperation {
             node.progress = value
         }
 
-    override val rangeInfo: AccessibilityNodeInfo.RangeInfo
+    override val rangeInfo: AccessibilityNodeInfoCompat.RangeInfoCompat
         @RequiresApi(Build.VERSION_CODES.KITKAT)
         get() = node.rangeInfo
 
@@ -138,9 +139,7 @@ interface FinderBuilderWithOperation : ViewOperation {
 
     override fun refresh() = node.refresh()
 
-    override val actionList
-        @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-        get() = node.actionList
+    override val actionList get() = node.actionList
 
     @RequiresApi(Build.VERSION_CODES.R)
     override fun sendImeAction() = node.sendImeAction()

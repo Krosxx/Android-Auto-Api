@@ -5,7 +5,7 @@ import cn.vove7.auto.core.viewnode.ViewNode
 /**
  * # ViewChildArray
  *
- * @author Libra
+ * @author Vove
  * @date 2023/2/11
  */
 class ViewChildList constructor(val node: ViewNode?) : ArrayList<ViewNode?>(node?.childCount ?: 0) {

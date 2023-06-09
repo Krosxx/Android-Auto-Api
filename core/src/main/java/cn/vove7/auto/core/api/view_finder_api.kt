@@ -3,8 +3,8 @@
 package cn.vove7.auto.core.api
 
 import android.os.Build
-import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import cn.vove7.auto.core.utils.times
 import cn.vove7.auto.core.viewfinder.*
 import cn.vove7.auto.core.viewnode.ViewNode
@@ -124,28 +124,28 @@ private fun ViewNode?.printWithChild(
 
 suspend fun findWith(
     includeInvisible: Boolean = false,
-    predicate: (AccessibilityNodeInfo) -> Boolean
+    predicate: (AcsNode) -> Boolean
 ): ViewNode? {
     return SF.where(predicate).findFirst(includeInvisible)
 }
 
 suspend fun findAllWith(
     includeInvisible: Boolean = false,
-    predicate: (AccessibilityNodeInfo) -> Boolean
+    predicate: (AcsNode) -> Boolean
 ): Array<ViewNode> {
     return SF.where(predicate).findAll(includeInvisible)
 }
 
 suspend fun ViewNode.findWith(
     includeInvisible: Boolean = false,
-    predicate: (AccessibilityNodeInfo) -> Boolean
+    predicate: (AcsNode) -> Boolean
 ): ViewNode? {
     return SmartFinder(this).where(predicate).findFirst(includeInvisible)
 }
 
 suspend fun ViewNode.findAllWith(
     includeInvisible: Boolean = false,
-    predicate: (AccessibilityNodeInfo) -> Boolean
+    predicate: (AcsNode) -> Boolean
 ): Array<ViewNode> {
     return SmartFinder(this).where(predicate).findAll(includeInvisible)
 }
