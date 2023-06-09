@@ -128,7 +128,9 @@ abstract class ViewFinder<T : ViewFinder<T>>(
             ?: throw ViewNodeNotFoundException(this)
     }
 
-    suspend fun exist(): Boolean = findFirst() != null
+    suspend fun exist(includeInvisible: Boolean = false): Boolean = findFirst(includeInvisible) != null
+
+    fun existBlocking(includeInvisible: Boolean = false): Boolean = findFirstBlocking(includeInvisible) != null
 
     /**
      *
