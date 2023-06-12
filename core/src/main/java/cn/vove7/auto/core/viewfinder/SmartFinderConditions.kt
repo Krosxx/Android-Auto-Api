@@ -173,7 +173,7 @@ class DescEqCondition(private val texts: Array<out String>) : MatchCondition {
     }
 
     override fun invoke(node: AcsNode) = texts.any {
-        return it.equals(node.contentDescription?.toString(), ignoreCase = true)
+        it.equals(node.contentDescription?.toString(), ignoreCase = true)
     }
 
     override fun toString() = if (texts.size == 1)
