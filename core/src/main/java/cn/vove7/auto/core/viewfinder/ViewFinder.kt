@@ -20,6 +20,8 @@ abstract class ViewFinder<T : ViewFinder<T>>(
 
     companion object {
 
+        var DEFAULT_ROOT_COMPAT = false
+
         /**
          * 使用深度搜索
          * @param depths Array<Int>
@@ -46,6 +48,11 @@ abstract class ViewFinder<T : ViewFinder<T>>(
 
     val startNode: ViewNode
         get() = node ?: ViewNode.getRoot()
+
+    // startNode 为 ViewNode.getRoot() 时，SDK_INT >= LOLLIPOP 搜索失败时，
+    // 走 SDK_INT < LOLLIPOP root 节点
+    private var rootCompat: Boolean = false
+        get() = field && this.node == null
 
     /**
      * 等待搜索，在指定时间内循环搜索（视图更新），超时返回null
@@ -91,12 +98,23 @@ abstract class ViewFinder<T : ViewFinder<T>>(
      */
     suspend fun findFirst(includeInvisible: Boolean = false): ViewNode? {
         // 不可见
-        return traverseAllNode(startNode, includeInvisible = includeInvisible)
+        return traverseAllNode(startNode, includeInvisible = includeInvisible).let {
+            if (it == null && rootCompat) {
+                traverseAllNode(ViewNode.activeWinNode(), includeInvisible = includeInvisible)
+            } else it
+        }
     }
 
     @Throws(CancellationException::class)
     fun findFirstBlocking(includeInvisible: Boolean = false): ViewNode? {
-        return traverseAllNodeBlocking(startNode, includeInvisible = includeInvisible)
+        return traverseAllNodeBlocking(startNode, includeInvisible = includeInvisible).let {
+            if (it == null && rootCompat) {
+                traverseAllNodeBlocking(
+                    ViewNode.activeWinNode(),
+                    includeInvisible = includeInvisible
+                )
+            } else it
+        }
     }
 
     /**
@@ -105,14 +123,20 @@ abstract class ViewFinder<T : ViewFinder<T>>(
      * @return ViewNode?
      */
     suspend fun findByDepths(vararg depths: Int): ViewNode? {
-        return findByDepths(depths, startNode)
+        return findByDepths(depths, startNode).let {
+            if (it == null && rootCompat) {
+                // to opt
+                findByDepths(depths, ViewNode.activeWinNode()!!)
+            } else it
+        }
     }
 
     suspend fun requireByDepths(vararg depths: Int): ViewNode {
         return findByDepths(*depths)
             ?: throw ViewNodeNotFoundException(
                 "can not find view by depths: ${depths.contentToString()}" +
-                    ", startNode: ${node ?: "root"}")
+                        ", startNode: ${node ?: "root"}"
+            )
     }
 
     //[findAll]
@@ -128,9 +152,17 @@ abstract class ViewFinder<T : ViewFinder<T>>(
             ?: throw ViewNodeNotFoundException(this)
     }
 
-    suspend fun exist(includeInvisible: Boolean = false): Boolean = findFirst(includeInvisible) != null
+    suspend fun exist(includeInvisible: Boolean = false): Boolean =
+        findFirst(includeInvisible) != null
 
-    fun existBlocking(includeInvisible: Boolean = false): Boolean = findFirstBlocking(includeInvisible) != null
+    fun existBlocking(includeInvisible: Boolean = false): Boolean =
+        findFirstBlocking(includeInvisible) != null
+
+    @Suppress("UNCHECKED_CAST")
+    fun enableRootCompat(): T {
+        rootCompat = true
+        return this as T
+    }
 
     /**
      *
@@ -140,6 +172,9 @@ abstract class ViewFinder<T : ViewFinder<T>>(
     suspend fun findAll(includeInvisible: Boolean = false): Array<ViewNode> {
         val l = mutableListOf<ViewNode>()
         traverseAllNode(startNode, l, includeInvisible)
+        if (l.isEmpty() && rootCompat) {
+            traverseAllNode(ViewNode.activeWinNode(), l, includeInvisible)
+        }
         return l.toTypedArray()
     }
 
@@ -204,8 +239,10 @@ abstract class ViewFinder<T : ViewFinder<T>>(
                     list.add(childNode)
                 } else return childNode
             }
-            val r = traverseAllNodeBlocking(childNode,
-                list, includeInvisible, depth + 1, nodeSet)
+            val r = traverseAllNodeBlocking(
+                childNode,
+                list, includeInvisible, depth + 1, nodeSet
+            )
             if (list == null && r != null) {
                 return r
             }
