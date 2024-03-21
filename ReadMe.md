@@ -10,8 +10,8 @@
 <br>
 
 **由于4.0版本代码进行重构，之前接入的项目需要修改 `import package`, 并且 `
-implementation 'com.github.Vove7.Android-Accessibility-Api:accessibility-api:4.0.0'`。UiAutomator 可参考 [Demo App](app)。**
-
+implementation 'com.github.Vove7.Android-Accessibility-Api:accessibility-api:4.0.0'`。UiAutomator 可参考 [Demo App](app)。**  
+**最新 library : `implementation 'com.github.Krosxx:Android-Auto-Api:Tag'`**
 
 
 ## 基础导航
@@ -421,11 +421,11 @@ allprojects {
 
 ```groovy
 dependencies {
-	implementation 'com.github.Vove7:Android-Accessibility-Api:Tag'
+	implementation 'com.github.Krosxx:Android-Auto-Api:Tag'
 }
 ```
 
-the TAG is [![](https://jitpack.io/v/com.github.Vove7/Android-Accessibility-Api.svg)](https://jitpack.io/#com.github.Vove7/Android-Accessibility-Api)
+the TAG is [![](https://jitpack.io/v/Krosxx/Android-Auto-Api.svg)](https://jitpack.io/#Krosxx/Android-Auto-Api)
 
 **注意：在`3.0.0`及之后版本，搜索方法需在协程作用域内使用，若需要`java`内调用请使用`2.1.1`版本**
 
