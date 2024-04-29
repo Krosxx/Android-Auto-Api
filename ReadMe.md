@@ -1,6 +1,6 @@
 # Android-Accessibility-Api
 
-[![](https://jitpack.io/v/Vove7/Android-Accessibility-Api.svg)](https://jitpack.io/#Vove7/Android-Accessibility-Api)
+[![](https://jitpack.io/v/Krosxx/Android-Auto-Api.svg)](https://jitpack.io/#/Android-Krosxx-Api)
 
 中文 | [English](ReadMe_EN.md)
 
@@ -10,7 +10,7 @@
 <br>
 
 **由于4.0版本代码进行重构，之前接入的项目需要修改 `import package`, 并且 `
-implementation 'com.github.Vove7.Android-Accessibility-Api:accessibility-api:4.0.0'`。UiAutomator 可参考 [Demo App](app)。**  
+implementation 'com.github.Krosxx.Android-Accessibility-Api:accessibility-api:4.0.0'`。UiAutomator 可参考 [Demo App](app)。**  
 **最新 library : `implementation 'com.github.Krosxx:Android-Auto-Api:Tag'`**
 
 
