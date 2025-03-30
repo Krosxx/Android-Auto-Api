@@ -392,6 +392,34 @@ fun ConditionGroup.selected(b: Boolean = true) = link(SelectedCondition(b))
 @JvmOverloads
 fun selected(b: Boolean = true) = SelectedCondition(b)
 
+
+class DescStartWithsCondition(val text: String) : MatchCondition {
+    init {
+        if (text.isEmpty()) throw IllegalStateException("requireNotEmpty")
+    }
+
+    override fun invoke(node: AcsNode) =
+        node.contentDescription?.toString()?.startsWith(text) ?: false
+
+    override fun toString() = "DESC startWiths $text"
+}
+
+class TextStartWithsCondition(val text: String) : MatchCondition {
+    init {
+        if (text.isEmpty()) throw IllegalStateException("requireNotEmpty")
+    }
+
+    override fun invoke(node: AcsNode) =
+        node.text?.toString()?.startsWith(text) ?: false
+
+    override fun toString() = "TEXT startWiths $text"
+}
+
+fun ConditionGroup.descStartWiths(desc: String) = link(DescStartWithsCondition(desc))
+fun ConditionGroup.textStartWiths(text: String) = link(TextStartWithsCondition(text))
+
+
+
 //
 // class CCondition(private val b: Boolean) : MatchCondition {
 //    override fun invoke(node: AcsNode): Boolean {

@@ -4,7 +4,6 @@ import cn.vove7.auto.core.utils.ViewNodeNotFoundException
 import cn.vove7.auto.core.utils.ensureActive
 import cn.vove7.auto.core.utils.ensureNotInterrupt
 import cn.vove7.auto.core.utils.whileWaitTime
-import cn.vove7.auto.core.viewfinder.FinderBuilderWithOperation.Companion.WAIT_MILLIS
 import cn.vove7.auto.core.viewnode.ViewNode
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -17,34 +16,6 @@ import kotlinx.coroutines.delay
 abstract class ViewFinder<T : ViewFinder<T>>(
     val node: ViewNode? = null
 ) {
-
-    companion object {
-
-        var DEFAULT_ROOT_COMPAT = false
-
-        /**
-         * 使用深度搜索
-         * @param depths Array<Int>
-         * @return ViewNode?
-         */
-        suspend fun findByDepths(depths: IntArray, node: ViewNode): ViewNode? {
-            var p: ViewNode? = node
-            depths.forEach {
-                ensureActive()
-                try {
-                    p = p?.childAt(it)
-                } catch (e: IndexOutOfBoundsException) {
-                    return null
-                }
-                if (p == null) {
-                    return null
-                }
-            }
-            return p
-        }
-
-        suspend fun findByDepths(vararg depths: Int) = findByDepths(depths, ViewNode.getRoot())
-    }
 
     val startNode: ViewNode
         get() = node ?: ViewNode.getRoot()
@@ -61,8 +32,8 @@ abstract class ViewFinder<T : ViewFinder<T>>(
      * @param waitTime Long 时限
      */
     suspend fun waitFor(
-        waitTime: Long = 30000,
-        interval: Long = 20L,
+        waitTime: Long = FinderConfig.FINDER_WAIT_MILLIS,
+        interval: Long = FinderConfig.FINDER_WAIT_INTERVAL,
         includeInvisible: Boolean = false
     ): ViewNode? {
         val wt = when {
@@ -75,6 +46,9 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         do {
             val node = findFirst(includeInvisible)
             if (node != null) return node
+            if (FinderConfig.ENABLE_FIND_FAILED_STRATEGY) {
+                FinderConfig.onFindFailed?.invoke(this)
+            }
             if (interval > 0) delay(interval)
             else ensureActive()
         } while (System.currentTimeMillis() < endTime)
@@ -117,35 +91,13 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         }
     }
 
-    /**
-     * 使用深度搜索
-     * @param depths Array<Int>
-     * @return ViewNode?
-     */
-    suspend fun findByDepths(vararg depths: Int): ViewNode? {
-        return findByDepths(depths, startNode).let {
-            if (it == null && rootCompat) {
-                // to opt
-                findByDepths(depths, ViewNode.activeWinNode()!!)
-            } else it
-        }
-    }
-
-    suspend fun requireByDepths(vararg depths: Int): ViewNode {
-        return findByDepths(*depths)
-            ?: throw ViewNodeNotFoundException(
-                "can not find view by depths: ${depths.contentToString()}" +
-                        ", startNode: ${node ?: "root"}"
-            )
-    }
-
     //[findAll]
     suspend fun find(includeInvisible: Boolean = false) = findAll(includeInvisible)
 
     @Throws(ViewNodeNotFoundException::class)
     suspend fun require(
-        waitMillis: Long = WAIT_MILLIS,
-        interval: Long = 20L,
+        waitMillis: Long = FinderConfig.FINDER_WAIT_MILLIS,
+        interval: Long = FinderConfig.FINDER_WAIT_INTERVAL,
         includeInvisible: Boolean = false
     ): ViewNode {
         return waitFor(waitMillis, interval, includeInvisible)

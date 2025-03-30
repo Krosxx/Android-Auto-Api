@@ -25,6 +25,7 @@ import cn.vove7.auto.core.utils.AdapterRectF
 import cn.vove7.auto.core.utils.AutoGestureDescription
 import cn.vove7.auto.core.utils.GestureResultCallback
 import cn.vove7.auto.core.viewfinder.*
+import cn.vove7.auto.core.viewnode.ViewNode
 import kotlinx.coroutines.*
 import timber.log.Timber
 import kotlin.coroutines.coroutineContext
@@ -88,7 +89,7 @@ class SiblingTestAction :Action() {
     override val name: String = "SiblingTest"
 
     override suspend fun run(act: ComponentActivity) {
-        printLayoutInfo()
+        Timber.i(buildLayoutInfo())
         val view = withText(name).requireFirst()
         Timber.i("view: $view")
         Timber.i("view.previousSibling: ${view.previousSibling}")
@@ -342,7 +343,9 @@ class SmartFinderAction : Action() {
 
     override suspend fun run(act: ComponentActivity) {
         val sb = StringBuilder()
-        val node = SF.text("SmartFinder测试").findFirst()
+        val node = SF.text("SmartFinder测试")
+            .enableRootCompat()
+            .findFirst()
         sb.appendLine(node?.toString())
 
         val orFinder = SF.text("123").or().id("text1").findFirst()
@@ -360,13 +363,13 @@ class SmartFinderAction : Action() {
         }.findFirst()
         sb.appendLine(customFinder?.toString())
 
-        val f3 = SG(_text eq "aaa", _desc.."q", _desc contains "aa").findFirst()
+        val f3 = SF(_text eq "aaa", _desc.."q", _desc contains "aa").findFirst()
         sb.appendLine(f3?.toString())
 
-        val groupFinder = SG(SF.containsText("Smart").or().id("111")).findFirst()
+        val groupFinder = SF.containsText("Smart").or().id("111").findFirst()
         sb.appendLine(groupFinder?.toString())
 
-        val s = SF.findByDepths(1, 0, 0)
+        val s = ViewNode.findByDepths(1, 0, 0)
         sb.appendLine(s?.toString())
 
         (SF where text("1111") or text("2222")

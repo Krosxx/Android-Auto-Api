@@ -16,10 +16,6 @@ import kotlinx.coroutines.runBlocking
 
 interface FinderBuilderWithOperation : ViewOperation {
 
-    companion object {
-        var WAIT_MILLIS = 2000L
-    }
-
     val finder: ViewFinder<*>
 
     private val node get() = runBlocking { finder.require() }
@@ -36,7 +32,7 @@ interface FinderBuilderWithOperation : ViewOperation {
     override fun click() = node.tryClick()
 
     @RequiresApi(Build.VERSION_CODES.N)
-    override fun globalClick() = node.globalClick()
+    override suspend fun globalClick() = node.globalClick()
 
     override fun longClick() = node.longClick()
 
@@ -146,6 +142,13 @@ interface FinderBuilderWithOperation : ViewOperation {
 
     override val previousSibling: ViewNode?
         get() = node.previousSibling
+
     override val nextSibling: ViewNode?
         get() = node.nextSibling
+
+    override suspend fun findByDepths(vararg depths: Int): ViewNode? =
+        node.findByDepths(*depths)
+
+    override val isShowingHint: Boolean
+        get() = node.isShowingHint
 }

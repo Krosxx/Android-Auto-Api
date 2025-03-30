@@ -4,11 +4,20 @@ package cn.vove7.auto.core.api
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import cn.vove7.auto.core.utils.times
-import cn.vove7.auto.core.viewfinder.*
+import cn.vove7.auto.core.viewfinder.AcsNode
+import cn.vove7.auto.core.viewfinder.ConditionGroup
+import cn.vove7.auto.core.viewfinder.SF
+import cn.vove7.auto.core.viewfinder.SmartFinder
+import cn.vove7.auto.core.viewfinder.ViewFinder
+import cn.vove7.auto.core.viewfinder.containsText
+import cn.vove7.auto.core.viewfinder.desc
+import cn.vove7.auto.core.viewfinder.editable
+import cn.vove7.auto.core.viewfinder.id
+import cn.vove7.auto.core.viewfinder.matchText
+import cn.vove7.auto.core.viewfinder.text
+import cn.vove7.auto.core.viewfinder.type
 import cn.vove7.auto.core.viewnode.ViewNode
-import timber.log.Timber
 
 /**
  * # apis
@@ -70,7 +79,7 @@ fun editor(): ConditionGroup {
  * @return ViewFindBuilder
  */
 suspend fun withDepths(vararg depths: Int): ViewNode? {
-    return ViewFinder.findByDepths(*depths)
+    return ViewNode.findByDepths(*depths)
 }
 
 /**
@@ -93,32 +102,37 @@ fun matchesText(reg: String): ConditionGroup {
 }
 
 /**
- * 输出布局
+ * 输出布局 到 StringBuilder
  */
-fun printLayoutInfo(includeInvisible: Boolean = true) {
-    ViewNode.getRoot().printWithChild(0, 0, includeInvisible)
+fun buildLayoutInfo(
+    sb: StringBuilder = StringBuilder(),
+    includeInvisible: Boolean = true
+): String {
+    ViewNode.getRoot().buildWithChild(0, 0, includeInvisible, sb)
+    return sb.toString()
 }
 
-private fun ViewNode?.printWithChild(
+private fun ViewNode?.buildWithChild(
     index: Int,
     dep: Int,
-    includeInvisible: Boolean
+    includeInvisible: Boolean,
+    sb: StringBuilder
 ) {
     if (this == null) {
-        Timber.tag("ViewNode").d("*" * dep + "[" + index + "] null")
+        sb.appendLine("*" * dep + "[" + index + "] null")
         return
     }
     if (!includeInvisible && !isVisibleToUser) {
-        Timber.tag("ViewNode").w("*" * dep + "[" + index + "] " + "InVisible")
+        sb.appendLine("*" * dep + "[" + index + "] " + "InVisible")
         return
     }
     if (isVisibleToUser) {
-        Timber.tag("ViewNode").d("*" * dep + "[" + index + "] " + toString())
+        sb.appendLine("*" * dep + "[" + index + "] " + toString())
     } else {
-        Timber.tag("ViewNode").w("*" * dep + "[" + index + "] " + toString())
+        sb.appendLine("*" * dep + "[" + index + "] " + toString())
     }
     children.forEachIndexed { i, it ->
-        it.printWithChild(i, dep + 1, includeInvisible)
+        it.buildWithChild(i, dep + 1, includeInvisible, sb)
     }
 }
 

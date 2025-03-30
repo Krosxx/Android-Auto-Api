@@ -8,11 +8,12 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import cn.vove7.auto.core.api.back
-import cn.vove7.auto.core.api.printLayoutInfo
 import cn.vove7.andro_accessibility_api.demo.R
 import cn.vove7.andro_accessibility_api.demo.launchWithExpHandler
+import cn.vove7.auto.core.api.back
+import cn.vove7.auto.core.api.buildLayoutInfo
 import kotlinx.coroutines.delay
+import timber.log.Timber
 
 /**
  * # ForegroundService
@@ -45,7 +46,12 @@ class ForegroundService : Service() {
         setContentText("输出布局 on logcat")
         val printIntent = Intent(this@ForegroundService, ForegroundService::class.java)
         printIntent.action = ACTION_PRINT_LAYOUT
-        val pi = PendingIntent.getService(this@ForegroundService, 0, printIntent, PendingIntent.FLAG_MUTABLE)
+        val pi = PendingIntent.getService(
+            this@ForegroundService,
+            0,
+            printIntent,
+            PendingIntent.FLAG_MUTABLE
+        )
 
         setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
         setSmallIcon(R.mipmap.ic_launcher_round)
@@ -74,7 +80,7 @@ class ForegroundService : Service() {
                 launchWithExpHandler {
                     back()
                     delay(1000)
-                    printLayoutInfo()
+                    Timber.i(buildLayoutInfo())
                 }
             }
         }

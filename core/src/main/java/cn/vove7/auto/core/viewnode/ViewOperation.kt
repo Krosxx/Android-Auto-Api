@@ -5,6 +5,7 @@ import android.graphics.Rect
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
 import cn.vove7.auto.core.utils.ViewChildList
+import cn.vove7.auto.core.utils.ViewNodeNotFoundException
 import cn.vove7.auto.core.viewfinder.SmartFinder
 
 /**
@@ -60,6 +61,11 @@ interface ViewOperation {
     val previousSibling: ViewNode?
     val nextSibling: ViewNode?
 
+    val requirePrevSibling get() = previousSibling
+        ?: throw NullPointerException("previousSibling is null of $this")
+    val requireNextSibling get() = nextSibling
+        ?: throw NullPointerException("nextSibling is null of $this")
+
     val requireParent: ViewNode
         get() {
             return parent ?: throw NullPointerException("parent is null of $this")
@@ -77,7 +83,7 @@ interface ViewOperation {
      * 需要7.0+
      * @return Boolean
      */
-    fun globalClick(): Boolean
+    suspend fun globalClick(): Boolean
 
     suspend fun globalLongClick(): Boolean
 
@@ -167,9 +173,6 @@ interface ViewOperation {
 
     fun clearFocus(): Boolean
 
-    /***以下不常用***/
-
-    // 一般
     fun scrollUp(): Boolean
 
     fun scrollDown(): Boolean
@@ -185,10 +188,22 @@ interface ViewOperation {
 
     fun finder(): SmartFinder
 
+    suspend fun findByDepths(vararg depths: Int): ViewNode?
+
+    suspend fun requireByDepths(vararg depths: Int): ViewNode {
+        return findByDepths(*depths)
+            ?: throw ViewNodeNotFoundException(
+                "can not find view by depths: ${depths.contentToString()}" +
+                        ", startNode: $this"
+            )
+    }
+
     fun refresh(): Boolean
 
     val actionList: List<AccessibilityActionCompat>
 
     fun sendImeAction(): Boolean
+
+    val isShowingHint: Boolean
 
 }

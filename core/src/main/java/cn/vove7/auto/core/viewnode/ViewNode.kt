@@ -7,12 +7,16 @@ import android.os.Bundle
 import android.view.ViewConfiguration
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
+import androidx.core.os.bundleOf
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
 import cn.vove7.auto.core.AutoApi
 import cn.vove7.auto.core.utils.ScreenAdapter
 import cn.vove7.auto.core.utils.ViewChildList
+import cn.vove7.auto.core.utils.ViewNodeNotFoundException
+import cn.vove7.auto.core.utils.ensureActive
 import cn.vove7.auto.core.viewfinder.AcsNode
+import cn.vove7.auto.core.viewfinder.FinderConfig
 import cn.vove7.auto.core.viewfinder.SmartFinder
 import kotlinx.coroutines.runBlocking
 import java.lang.Thread.sleep
@@ -22,7 +26,7 @@ import java.lang.Thread.sleep
  * @property node 无障碍视图节点
  */
 @Suppress("MemberVisibilityCanBePrivate")
-class ViewNode : ViewOperation, Comparable<ViewNode> {
+class ViewNode : ViewOperation {
     val node: AcsNode
 
     constructor(node: AccessibilityNodeInfo) {
@@ -33,18 +37,11 @@ class ViewNode : ViewOperation, Comparable<ViewNode> {
         this.node = node
     }
 
-
-    /**
-     * 文本相似度
-     */
-    var similarityText: Float = 0f
-
     private var childrenCache: ViewChildList? = null
 
     private var buildWithChildren = false
 
     companion object {
-        var TRY_OP_NUM = 10
 
         private const val ROOT_TAG = "ViewNodeRoot"
 
@@ -90,6 +87,19 @@ class ViewNode : ViewOperation, Comparable<ViewNode> {
                 childrenCache = cs
             }
         }
+
+        // 使用 ViewNode.activeWinNode()
+        suspend fun findByDepths(vararg depths: Int) = activeWinNode()?.findByDepths(*depths)
+
+        suspend fun requireByDepths(vararg depths: Int): ViewNode {
+            val root = activeWinNode()
+            return root?.findByDepths(*depths)
+                ?: throw ViewNodeNotFoundException(
+                    "can not find view by depths: ${depths.contentToString()}" +
+                            ", startNode: root($root)"
+                )
+        }
+
     }
 
     override val id: String
@@ -133,12 +143,10 @@ class ViewNode : ViewOperation, Comparable<ViewNode> {
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
-    override fun globalClick(): Boolean {
+    override suspend fun globalClick(): Boolean {
         // 获得中心点
         val relp = ScreenAdapter.getRelPoint(getCenterPoint())
-        return runBlocking {
-            cn.vove7.auto.core.api.click(relp.x, relp.y)
-        }
+        return cn.vove7.auto.core.api.click(relp.x, relp.y)
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
@@ -155,13 +163,12 @@ class ViewNode : ViewOperation, Comparable<ViewNode> {
     private fun tryOp(action: Int): Boolean {
         var p = node
         var i = 0
-        while (i < TRY_OP_NUM && !p.performAction(action)) {
-            if (p.parent?.also { p = it } == null) {
-                return false
-            }
+        while (i < FinderConfig.TRY_OP_CNT) {
+            if (p.performAction(action)) return true
+            if (p.parent?.also { p = it } == null) return false
             i++
         }
-        return i != TRY_OP_NUM
+        return false
     }
 
     fun clearChildrenCache() {
@@ -173,9 +180,7 @@ class ViewNode : ViewOperation, Comparable<ViewNode> {
     override val children: ViewChildList
         get() {
             val cc = childrenCache
-            if (cc != null) {
-                return cc
-            }
+            if (cc != null) return cc
             return ViewChildList(this).also {
                 childrenCache = it
             }
@@ -220,10 +225,12 @@ class ViewNode : ViewOperation, Comparable<ViewNode> {
     }
 
     override fun setSelection(start: Int, end: Int): Boolean {
-        val args = Bundle()
-        args.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, start)
-        args.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, end)
-        return node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, args)
+        return node.performAction(
+            AccessibilityNodeInfo.ACTION_SET_SELECTION, bundleOf(
+                AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT to start,
+                AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT to end
+            )
+        )
     }
 
     override fun clearSelection(): Boolean {
@@ -264,10 +271,7 @@ class ViewNode : ViewOperation, Comparable<ViewNode> {
     }
 
     override var text: CharSequence?
-        get() {
-            refresh()
-            return node.text
-        }
+        get() = node.text
         set(v) {
             val arg = Bundle()
             arg.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, v)
@@ -284,10 +288,10 @@ class ViewNode : ViewOperation, Comparable<ViewNode> {
         get() = node.rangeInfo.current
         @RequiresApi(Build.VERSION_CODES.N)
         set(value) {
-            node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS.id,
-                Bundle().also {
-                    it.putFloat(AccessibilityNodeInfo.ACTION_ARGUMENT_PROGRESS_VALUE, value)
-                })
+            node.performAction(
+                AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS.id,
+                bundleOf(AccessibilityNodeInfo.ACTION_ARGUMENT_PROGRESS_VALUE to value)
+            )
         }
 
     override val rangeInfo: AccessibilityNodeInfoCompat.RangeInfoCompat
@@ -305,15 +309,17 @@ class ViewNode : ViewOperation, Comparable<ViewNode> {
     }
 
     override fun trySetText(text: CharSequence): Boolean {
-        val arg = Bundle()
-        arg.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
+        val arg = bundleOf(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE to text)
         var p = node
         var i = 0
-        while (i < TRY_OP_NUM && !p.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arg)) {
+        while (i < FinderConfig.TRY_OP_CNT && !p.performAction(
+                AccessibilityNodeInfo.ACTION_SET_TEXT, arg
+            )
+        ) {
             p = node.parent
             i++
         }
-        val b = i != TRY_OP_NUM
+        val b = i != FinderConfig.TRY_OP_CNT
         return b
     }
 
@@ -340,25 +346,10 @@ class ViewNode : ViewOperation, Comparable<ViewNode> {
         return node.performAction(AccessibilityNodeInfo.ACTION_CLEAR_FOCUS)
     }
 
-    override fun compareTo(other: ViewNode): Int {
-        return ((other.similarityText - similarityText) * 100).toInt()
-    }
+    override val isShowingHint: Boolean get() = node.isShowingHintText
 
     override fun toString(): String {
         return nodeSummary(node)
-    }
-
-    fun sortOutInfo(): ViewInfo {
-        return ViewInfo(
-            text,
-            node.contentDescription,
-            className,
-            boundsInParent,
-            bounds
-//                node.isClickable,
-//                null,
-//                node.canOpenPopup()
-        )
     }
 
     private fun nodeSummary(node: AcsNode): String {
@@ -370,26 +361,71 @@ class ViewNode : ViewOperation, Comparable<ViewNode> {
             if (node.text != null) append(", text: ${node.text}")
             if (hintText != null) append(", hintText: $hintText")
             if (desc != null) append(", desc: $desc")
-            append(", bounds: $bounds, childCount: $childCount")
+            append(", bounds: $bounds")
+            bounds.also {
+                append(", b_width: ")
+                append(it.width())
+                append(", b_height: ")
+                append(it.height())
+            }
+            boundsInParent.also {
+                append(", p_width: ")
+                append(it.height())
+                append(", p_height: ")
+                append(it.height())
+            }
+            append(", childCount: $childCount")
             if (node.isEditable) append(", Editable")
+            if (node.isShowingHintText) append(", ShowingHint")
+            if (node.isImportantForAccessibility) append(", Important")
             if (node.isClickable) append(", Clickable")
+            if (node.isContextClickable) append(", ContextClickable")
+            if (node.isLongClickable) append(", LongClickable")
             if (node.isSelected) append(", Selected")
             if (!node.isVisibleToUser) append(", InVisible")
             if (!node.isEnabled) append(", Disabled")
             if (node.isPassword) append(", Password")
+            if (node.isCheckable) append(", Checkable")
             if (node.isChecked) append(", Checked")
+            if (node.isFocusable) append(", Focusable")
+            if (node.isScreenReaderFocusable) append(", ReaderFocusable")
             if (node.isFocused) append(", Focused")
             if (node.isScrollable) append(", Scrollable")
             if (node.isDismissable) append(", Dismissable")
+            if (node.isAccessibilityFocused) append(", AccessibilityFocused")
+            if (node.canOpenPopup()) append(", CanOpenPopup")
+            append(", hash: 0x")
+            append(Integer.toHexString(node.hashCode()))
             append(" }")
         }
     }
 
     /**
-     * 从该节点搜索
+     * 从该节点搜索 SmartFinder
      * @return SmartFinder
      */
     override fun finder() = SmartFinder(this)
+
+    /**
+     * 使用深度搜索
+     * @param depths Array<Int>
+     * @return ViewNode?
+     */
+    override suspend fun findByDepths(vararg depths: Int): ViewNode? {
+        var p: ViewNode? = this
+        depths.forEach {
+            ensureActive()
+            try {
+                p = p?.childAt(it)
+            } catch (e: IndexOutOfBoundsException) {
+                return null
+            }
+            if (p == null) {
+                return null
+            }
+        }
+        return p
+    }
 
     override var isVisibleToUser: Boolean
         get() {
@@ -400,11 +436,10 @@ class ViewNode : ViewOperation, Comparable<ViewNode> {
             node.isVisibleToUser = value
         }
 
-    override fun isClickable(): Boolean {
-        return node.isClickable
-    }
+    override fun isClickable() = node.isClickable
 
     override fun refresh(): Boolean {
+        childrenCache = null
         if (buildWithChildren) {
             childrenCache = rootNodesOfAllWindows()
             return true

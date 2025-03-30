@@ -19,6 +19,7 @@ import cn.vove7.auto.core.AutoApi
 import cn.vove7.auto.core.OnPageUpdate
 import cn.vove7.auto.core.PageUpdateMonitor
 import cn.vove7.auto.core.utils.AutoGestureDescription
+import cn.vove7.auto.core.utils.NeedAccessibilityException
 import cn.vove7.auto.core.utils.convert
 import cn.vove7.auto.core.utils.jumpAccessibilityServiceSettings
 import cn.vove7.auto.core.utils.whileWaitTime
@@ -261,17 +262,3 @@ suspend fun waitGestureAccessibility(waitMillis: Long = 30000) {
 suspend fun waitAccessibility(waitMillis: Long = 30000, cls: Class<*>): Boolean {
     return AccessibilityApi.waitAccessibility(waitMillis, cls)
 }
-
-
-/**
- * 无障碍服务未运行异常
- * @constructor
- */
-open class NeedAccessibilityException(name: String?) : RuntimeException("无障碍服务未运行: $name")
-
-class NeedBaseAccessibilityException :
-    NeedAccessibilityException(AccessibilityApi.BASE_SERVICE_CLS.name)
-
-class NeedGestureAccessibilityException :
-    NeedAccessibilityException(AccessibilityApi.GESTURE_SERVICE_CLS.name)
-

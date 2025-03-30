@@ -14,14 +14,14 @@ import cn.vove7.auto.core.viewfinder.ViewFinder
  */
 class ViewNodeNotFoundException : Exception {
     constructor(finder: ViewFinder<*>)
-        : super("ViewNodeNotFound: ${finder.finderInfo()}")
+            : super("ViewNodeNotFound: ${finder.finderInfo()}")
 
     constructor(msg: String) : super(msg)
 }
 
 class GestureCanceledException(
-    val gestureDescription: AutoGestureDescription
-) : RuntimeException()
+    private val gestureDescription: AutoGestureDescription
+) : RuntimeException(gestureDescription.toString())
 
 class AutoServiceUnavailableException : RuntimeException() {
 
@@ -29,3 +29,10 @@ class AutoServiceUnavailableException : RuntimeException() {
         return "AutoServiceUnavailableException"
     }
 }
+
+/**
+ * 无障碍服务未运行异常
+ * @constructor
+ */
+open class NeedAccessibilityException(name: String?) :
+    RuntimeException("Accessibility service is not running: $name")

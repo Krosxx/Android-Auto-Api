@@ -34,7 +34,7 @@ abstract class ConditionGroup(
 ) : ViewFinder<ConditionGroup>(node), MatchCondition, FinderBuilderWithOperation {
 
     override var conditionType: ConditionType = ConditionType.AND
-    private val conditions: MutableList<MatchCondition> = mutableListOf()
+    internal val conditions: MutableList<MatchCondition> = mutableListOf()
     private var lastType: ConditionType = ConditionType.AND
     override val finder: ViewFinder<*> get() = this
 
@@ -122,14 +122,6 @@ abstract class ConditionGroup(
 
     infix fun where(cond: MatchCondition): ConditionGroup = and(cond)
     infix fun where(group: ConditionGroup): ConditionGroup = and(group)
-}
-
-fun SG(vararg conditions: MatchCondition) = SF.apply {
-    and(*conditions)
-}
-
-fun SG(group: ConditionGroup) = SF.apply {
-    and(group)
 }
 
 val SF get() = SmartFinder()

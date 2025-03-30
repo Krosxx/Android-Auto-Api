@@ -35,15 +35,12 @@ fun requireImpl(): AutoApi {
     } ?: throw AutoServiceUnavailableException()
 }
 
-fun buildProxy(): AutoApi =
-    Proxy.newProxyInstance(getApplication().classLoader, arrayOf(AutoApi::class.java)
-    ) { _, method, args ->
-        if (args == null) {
-            method?.invoke(requireImpl())
-        } else {
-            method?.invoke(requireImpl(), *args)
-        }
-    } as AutoApi
+fun buildProxy(): AutoApi = Proxy.newProxyInstance(
+    getApplication().classLoader, arrayOf(AutoApi::class.java)
+) { _, method, args ->
+    if (args == null) method?.invoke(requireImpl())
+    else method?.invoke(requireImpl(), *args)
+} as AutoApi
 
 
 interface AutoApi {
@@ -57,9 +54,9 @@ interface AutoApi {
         }
 
         val serviceType: Int
-            get() = when {
-                AutoImpl is AccessibilityService -> SERVICE_TYPE_ACCESSIBILITY
-                AutoImpl is Instrumentation -> SERVICE_TYPE_INSTRUMENTATION
+            get() = when (AutoImpl) {
+                is AccessibilityService -> SERVICE_TYPE_ACCESSIBILITY
+                is Instrumentation -> SERVICE_TYPE_INSTRUMENTATION
                 else -> SERVICE_TYPE_NONE
             }
 
