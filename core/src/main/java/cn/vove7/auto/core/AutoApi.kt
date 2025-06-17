@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Build
 import android.os.Handler
+import android.os.Looper
 import android.util.SparseArray
 import android.view.InputEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -14,8 +15,11 @@ import androidx.annotation.RequiresApi
 import cn.vove7.auto.core.utils.AutoGestureDescription
 import cn.vove7.auto.core.utils.AutoServiceUnavailableException
 import cn.vove7.auto.core.utils.GestureResultCallback
+import cn.vove7.auto.core.utils.ensureNotInMainThread
 import cn.vove7.auto.core.utils.getApplication
 import java.lang.reflect.Proxy
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 /**
  * # AutoApi
@@ -130,8 +134,27 @@ interface AutoApi {
 
     fun performAction(action: Int): Boolean
 
+    // 同步执行手势 (不可于主线程调用)
+    // 返回执行是否成功
+    suspend fun doGestureSync(
+        gesture: AutoGestureDescription
+    ): Boolean {
+        ensureNotInMainThread("doGestureSync")
+        return suspendCoroutine { cont ->
+            doGestureAsync(gesture, object : GestureResultCallback() {
+                override fun onCompleted(gestureDescription: AutoGestureDescription?) {
+                    cont.resume(true)
+                }
 
-    suspend fun doGesturesAsync(
+                override fun onCancelled(gestureDescription: AutoGestureDescription?) {
+                    cont.resume(false)
+                }
+            }, Handler(Looper.getMainLooper()))
+        }
+    }
+
+    // 异步执行手势
+    fun doGestureAsync(
         gesture: AutoGestureDescription,
         callback: GestureResultCallback?,
         handler: Handler?

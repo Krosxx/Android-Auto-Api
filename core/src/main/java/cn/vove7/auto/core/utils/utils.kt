@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.os.Looper
 import android.os.SystemClock
 import android.provider.Settings
 import androidx.annotation.RequiresApi
@@ -16,7 +17,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 import timber.log.Timber
-import java.util.*
+import java.util.Locale
 import kotlin.coroutines.coroutineContext
 import kotlin.math.max
 
@@ -147,6 +148,16 @@ private val bypassHiddenApi by lazy {
     }
 }
 
+fun ensureNotInMainThread(name: String) {
+    if (Looper.myLooper() == Looper.getMainLooper()) {
+        throw IllegalThreadStateException("$name can not run on main thread")
+    }
+}
+
+fun AutoGestureDescription.StrokeDescription.toDesc() =
+    AutoGestureDescription.Builder().addStroke(this).build()
+
+
 @RequiresApi(Build.VERSION_CODES.N)
 fun AutoGestureDescription.convert(): GestureDescription {
     val autoDesc = this
@@ -159,16 +170,20 @@ fun AutoGestureDescription.convert(): GestureDescription {
             for (i in 0 until autoDesc.strokeCount) {
                 val autoStroke = autoDesc.getStroke(i)
                 val stroke = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    GestureDescription.StrokeDescription(autoStroke.path, autoStroke.startTime,
-                        autoStroke.duration, autoStroke.willContinue()).also {
+                    GestureDescription.StrokeDescription(
+                        autoStroke.path, autoStroke.startTime,
+                        autoStroke.duration, autoStroke.willContinue()
+                    ).also {
                         it::class.java.getDeclaredField("mContinuedStrokeId").also { f ->
                             f.isAccessible = true
                             f.set(it, autoStroke.mContinuedStrokeId)
                         }
                     }
                 } else {
-                    GestureDescription.StrokeDescription(autoStroke.path, autoStroke.startTime,
-                        autoStroke.duration)
+                    GestureDescription.StrokeDescription(
+                        autoStroke.path, autoStroke.startTime,
+                        autoStroke.duration
+                    )
                 }
                 kotlin.runCatching {
                     stroke::class.java.getDeclaredField("mId").also { f ->

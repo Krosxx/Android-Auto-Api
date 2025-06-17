@@ -116,7 +116,7 @@ open class AutoInstrumentation : Instrumentation(), AutoApi {
 
     override fun performAction(action: Int) = uiAutomation.performGlobalAction(action)
 
-    override suspend fun doGesturesAsync(
+    override fun doGestureAsync(
         gesture: AutoGestureDescription,
         callback: GestureResultCallback?,
         handler: Handler?

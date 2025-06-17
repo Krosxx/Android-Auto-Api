@@ -1,21 +1,15 @@
 package cn.vove7.auto.core.api
 
 import android.graphics.Path
-import android.os.Handler
-import android.os.HandlerThread
-import android.os.Looper
 import android.util.Pair
 import android.view.ViewConfiguration
 import cn.vove7.auto.core.AutoApi
-import cn.vove7.auto.core.utils.GestureCanceledException
 import cn.vove7.auto.core.utils.AutoGestureDescription
+import cn.vove7.auto.core.utils.GestureCanceledException
 import cn.vove7.auto.core.utils.GestureResultCallback
 import cn.vove7.auto.core.utils.ScreenAdapter
-import kotlinx.coroutines.runBlocking
+import cn.vove7.auto.core.utils.ensureNotInMainThread
 import timber.log.Timber
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 /**
  * 手势api
@@ -70,12 +64,12 @@ suspend fun gesture(
  * @param duration Long
  * @param points Array<Pair<Int, Int>>
  */
-suspend fun gestureAsync(
+fun gestureAsync(
     duration: Long, path: Path,
     callback: GestureResultCallback? = null
 ) = gestureAsync(duration, arrayOf(path), callback)
 
-suspend fun gestureAsync(
+fun gestureAsync(
     duration: Long, paths: Array<Path>,
     callback: GestureResultCallback? = null
 ) = doGesturesAsync(
@@ -115,7 +109,7 @@ suspend fun gestures(
  * @param duration Long
  * @param ppss Array<Array<Pair<Int, Int>>>
  */
-suspend fun gesturesAsync(
+fun gesturesAsync(
     duration: Long, ppss: Array<Array<Pair<Int, Int>>>,
     callback: GestureResultCallback? = null
 ) {
@@ -137,29 +131,8 @@ suspend fun playGestures(
 ): Boolean {
     val builder = AutoGestureDescription.Builder()
     strokeList.forEach(builder::addStroke)
-
-    val handler = if (Looper.myLooper() == Looper.getMainLooper()) null
-    else HandlerThread("ges").let {
-        it.start()
-        Handler(it.looper)
-    }
-    return suspendCoroutine { coroutine ->
-        runBlocking {
-            AutoApi.doGesturesAsync(builder.build(),
-                object : GestureResultCallback() {
-                    override fun onCompleted(gestureDescription: AutoGestureDescription) {
-                        handler?.looper?.quitSafely()
-                        coroutine.resume(true)
-                    }
-
-                    override fun onCancelled(gestureDescription: AutoGestureDescription) {
-                        handler?.looper?.quitSafely()
-                        coroutine.resumeWithException(GestureCanceledException(gestureDescription))
-                    }
-                }, handler
-            )
-        }
-    }
+    ensureNotInMainThread("playGestures")
+    return AutoApi.doGestureSync(builder.build())
 }
 
 /**
@@ -182,13 +155,13 @@ private fun pointsToPath(points: Array<Pair<Int, Int>>): Path {
  * 异步手势
  * @param strokeList List<out StrokeDescription>
  */
-suspend fun doGesturesAsync(
+fun doGesturesAsync(
     strokeList: List<AutoGestureDescription.StrokeDescription>,
     callback: GestureResultCallback?
 ) {
     val builder = AutoGestureDescription.Builder()
     strokeList.forEach(builder::addStroke)
-    AutoApi.doGesturesAsync(builder.build(), callback, null)
+    AutoApi.doGestureAsync(builder.build(), callback, null)
 }
 
 suspend fun click(x: Int, y: Int): Boolean =
@@ -234,9 +207,10 @@ suspend fun swipe(
     dur: Int
 ): Boolean = gesture(
     dur.toLong(), arrayOf(
-    Pair(x1, y1),
-    Pair(x2, y2)
-))
+        Pair(x1, y1),
+        Pair(x2, y2)
+    )
+)
 
 suspend fun scrollUp(): Boolean {
     val mtop = (ScreenAdapter.relHeight * 0.1).toInt()
