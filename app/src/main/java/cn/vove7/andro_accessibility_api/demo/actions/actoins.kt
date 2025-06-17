@@ -17,16 +17,59 @@ import android.widget.SeekBar
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
-import cn.vove7.andro_accessibility_api.demo.*
+import cn.vove7.andro_accessibility_api.demo.DemoApp
+import cn.vove7.andro_accessibility_api.demo.DrawableActivity
+import cn.vove7.andro_accessibility_api.demo.MainActivity
+import cn.vove7.andro_accessibility_api.demo.R
+import cn.vove7.andro_accessibility_api.demo.toast
 import cn.vove7.auto.core.AutoApi
-import cn.vove7.auto.core.api.*
+import cn.vove7.auto.core.api.back
+import cn.vove7.auto.core.api.buildLayoutInfo
+import cn.vove7.auto.core.api.click
+import cn.vove7.auto.core.api.editor
+import cn.vove7.auto.core.api.findAllWith
+import cn.vove7.auto.core.api.gesture
+import cn.vove7.auto.core.api.gestureAsync
+import cn.vove7.auto.core.api.gestures
+import cn.vove7.auto.core.api.home
+import cn.vove7.auto.core.api.matchesText
+import cn.vove7.auto.core.api.powerDialog
+import cn.vove7.auto.core.api.pullNotificationBar
+import cn.vove7.auto.core.api.quickSettings
+import cn.vove7.auto.core.api.recents
+import cn.vove7.auto.core.api.setScreenSize
+import cn.vove7.auto.core.api.waitForApp
+import cn.vove7.auto.core.api.withId
+import cn.vove7.auto.core.api.withText
+import cn.vove7.auto.core.api.withType
 import cn.vove7.auto.core.requireAutoService
 import cn.vove7.auto.core.utils.AdapterRectF
 import cn.vove7.auto.core.utils.AutoGestureDescription
 import cn.vove7.auto.core.utils.GestureResultCallback
-import cn.vove7.auto.core.viewfinder.*
+import cn.vove7.auto.core.utils.toDesc
+import cn.vove7.auto.core.viewfinder.SF
+import cn.vove7.auto.core.viewfinder.ScreenTextFinder
+import cn.vove7.auto.core.viewfinder._desc
+import cn.vove7.auto.core.viewfinder._text
+import cn.vove7.auto.core.viewfinder.clickable
+import cn.vove7.auto.core.viewfinder.containsText
+import cn.vove7.auto.core.viewfinder.desc
+import cn.vove7.auto.core.viewfinder.editable
+import cn.vove7.auto.core.viewfinder.id
+import cn.vove7.auto.core.viewfinder.longClickable
+import cn.vove7.auto.core.viewfinder.matchText
+import cn.vove7.auto.core.viewfinder.scrollable
+import cn.vove7.auto.core.viewfinder.similarityText
+import cn.vove7.auto.core.viewfinder.text
+import cn.vove7.auto.core.viewfinder.textOrDesc
+import cn.vove7.auto.core.viewfinder.type
 import cn.vove7.auto.core.viewnode.ViewNode
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import kotlin.coroutines.coroutineContext
 
@@ -85,7 +128,7 @@ class PickScreenText : Action() {
     }
 }
 
-class SiblingTestAction :Action() {
+class SiblingTestAction : Action() {
     override val name: String = "SiblingTest"
 
     override suspend fun run(act: ComponentActivity) {
@@ -114,12 +157,13 @@ class DrawableAction : Action() {
         // 指定点转路径手势
         if (!gesture(
                 2000L, arrayOf(
-                100 t 100,
-                100 t 200,
-                200 t 200,
-                200 t 100,
-                100 t 100
-            ))
+                    100 t 100,
+                    100 t 200,
+                    200 t 200,
+                    200 t 100,
+                    100 t 100
+                )
+            )
         ) {
             toast("打断")
         }
@@ -150,16 +194,22 @@ class DrawableAction : Action() {
 
     @RequiresApi(Build.VERSION_CODES.N)
     private suspend fun scaleGesture() {
-        if (!gestures(800, arrayOf(
-                arrayOf(Pair(200, 200), Pair(100, 100)),
-                arrayOf(Pair(220, 220), Pair(300, 300)),
-            ))) {
+        if (!gestures(
+                800, arrayOf(
+                    arrayOf(Pair(200, 200), Pair(100, 100)),
+                    arrayOf(Pair(220, 220), Pair(300, 300)),
+                )
+            )
+        ) {
             toast("scaleGesture 失败")
         }
-        if (!gestures(800, arrayOf(
-                arrayOf(Pair(200, 200), Pair(100, 100)).reversedArray(),
-                arrayOf(Pair(220, 220), Pair(300, 300)).reversedArray(),
-            ))) {
+        if (!gestures(
+                800, arrayOf(
+                    arrayOf(Pair(200, 200), Pair(100, 100)).reversedArray(),
+                    arrayOf(Pair(220, 220), Pair(300, 300)).reversedArray(),
+                )
+            )
+        ) {
             toast("scaleGesture 失败")
         }
     }
@@ -373,7 +423,7 @@ class SmartFinderAction : Action() {
         sb.appendLine(s?.toString())
 
         (SF where text("1111") or text("2222")
-            and id("111") or longClickable()).findAll()
+                and id("111") or longClickable()).findAll()
 
 
         SF.where {
@@ -533,12 +583,14 @@ class InstrumentationInjectInputEventAction(
     override suspend fun run(act: ComponentActivity) {
         var t = SystemClock.uptimeMillis()
         repeat(100) {
-            val d = buildMotionEvent(t,
+            val d = buildMotionEvent(
+                t,
                 when (it) {
                     0 -> MotionEvent.ACTION_DOWN
                     99 -> MotionEvent.ACTION_UP
                     else -> MotionEvent.ACTION_MOVE
-                }, 100f, 5f * it)
+                }, 100f, 5f * it
+            )
             AutoApi.injectInputEvent(d, false)
             delay(10)
         }
@@ -604,23 +656,42 @@ class ContinueGestureAction(override val name: String = "ContinueGesture") : Act
             moveTo(startX, y)
             lineTo((endX + startX) / 2, y)
         }
-
         val stroke = AutoGestureDescription.StrokeDescription(p1, 0, 600, true)
         Timber.i("stroke id: ${stroke.id}")
-        AutoApi.doGesturesAsync(
-            AutoGestureDescription.Builder().addStroke(stroke).build(), null, null)
-        delay(2000)
+        var r = AutoApi.doGestureSync(stroke.toDesc())
+        Timber.i("1 $r")
+        delay(200)
 
         val p2 = Path().apply {
             moveTo((endX + startX) / 2, y)
             lineTo(endX.toFloat(), y)
         }
         // 无障碍模式下 Android 8.0 以下 无效
+        // uiauto 模式无视 警告
         val continueStroke = stroke.continueStroke(p2, 0, 600, false)
         Timber.i("continuedStrokeId: ${continueStroke.continuedStrokeId}")
-        AutoApi.doGesturesAsync(
-            AutoGestureDescription.Builder().addStroke(continueStroke).build(), null, null)
-        delay(1500)
+        r = AutoApi.doGestureSync(continueStroke.toDesc())
+        Timber.i("2 $r")
+
+        delay(500)
+        val p3 = Path().apply {
+            moveTo(endX.toFloat(), y)
+            lineTo((endX + startX) / 2, y)
+        }
+        val stroke3 = AutoGestureDescription.StrokeDescription(p3, 0, 600, true)
+        r = AutoApi.doGestureSync(stroke3.toDesc())
+        Timber.i("3 $r")
+        delay(500)
+
+        val s4 = stroke3.continueStroke(
+            Path().apply {
+                moveTo((endX + startX) / 2, y)
+                lineTo(startX, y)
+            }, 0, 500, false
+        )
+        r =  AutoApi.doGestureSync(s4.toDesc())
+        Timber.i("4 $r")
+        delay(500)
     }
 }
 

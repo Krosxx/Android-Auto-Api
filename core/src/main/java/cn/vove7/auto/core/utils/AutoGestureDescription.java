@@ -368,6 +368,7 @@ public final class AutoGestureDescription {
          *                     next gesture {@code false} otherwise.
          * @return
          */
+        @RequiresApi(Build.VERSION_CODES.O)
         public StrokeDescription continueStroke(Path path, long startTime, long duration,
                                                 boolean willContinue) {
             if (!mContinued) {
@@ -385,6 +386,7 @@ public final class AutoGestureDescription {
          *
          * @return {@code true} if the stroke is to be continued.
          */
+        @RequiresApi(Build.VERSION_CODES.O)
         public boolean willContinue() {
             return mContinued;
         }

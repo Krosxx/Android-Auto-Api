@@ -218,7 +218,7 @@ abstract class AccessibilityApi : AccessibilityService(), AutoApi {
 
     }
 
-    override suspend fun doGesturesAsync(gesture: AutoGestureDescription, callback: GestureCallback?, handler: Handler?) {
+    override fun doGestureAsync(gesture: AutoGestureDescription, callback: GestureCallback?, handler: Handler?) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
             throw IllegalStateException("dispatchGesture require android N+")
         }
