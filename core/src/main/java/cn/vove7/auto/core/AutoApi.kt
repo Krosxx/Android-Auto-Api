@@ -172,6 +172,7 @@ interface AutoApi {
         throw NotImplementedError("not support")
     }
 
+    // Accessibility 方式需要 Android 11+
     fun takeScreenshot(): Bitmap?
 
     fun registerImpl() {

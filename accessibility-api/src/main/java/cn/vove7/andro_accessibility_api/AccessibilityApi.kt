@@ -9,6 +9,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Build
 import android.os.Handler
+import android.util.Log
 import android.util.SparseArray
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -21,6 +22,7 @@ import cn.vove7.auto.core.PageUpdateMonitor
 import cn.vove7.auto.core.utils.AutoGestureDescription
 import cn.vove7.auto.core.utils.NeedAccessibilityException
 import cn.vove7.auto.core.utils.convert
+import cn.vove7.auto.core.utils.ensureNotInMainThread
 import cn.vove7.auto.core.utils.jumpAccessibilityServiceSettings
 import cn.vove7.auto.core.utils.whileWaitTime
 import kotlinx.coroutines.runBlocking
@@ -97,6 +99,7 @@ abstract class AccessibilityApi : AccessibilityService(), AutoApi {
 
     override fun takeScreenshot(): Bitmap? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            ensureNotInMainThread("takeScreenshot")
             return runBlocking {
                 suspendCoroutine<Bitmap> { cont ->
                     super.takeScreenshot(0, appCtx.mainExecutor, object : TakeScreenshotCallback {
@@ -113,6 +116,8 @@ abstract class AccessibilityApi : AccessibilityService(), AutoApi {
                     })
                 }
             }
+        } else {
+            Log.w("AccessibilityApi" , "takeScreenshot need Android 11+")
         }
         return null
     }
