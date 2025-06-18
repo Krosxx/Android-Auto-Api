@@ -1,6 +1,6 @@
 # Android-Accessibility-Api
 
-[![](https://jitpack.io/v/Krosxx/Android-Auto-Api.svg)](https://jitpack.io/#/Android-Krosxx-Api)
+[![](https://jitpack.io/v/Krosxx/Android-Auto-Api.svg)](https://jitpack.io/#Krosxx/Android-Auto-Api)
 
 中文 | [English](ReadMe_EN.md)
 
@@ -14,6 +14,7 @@
 implementation 'com.github.Krosxx.Android-Accessibility-Api:accessibility-api:4.0.0'`。UiAutomator 可参考 [Demo App](app)。**  
 **最新 library : `implementation 'com.github.Krosxx:Android-Auto-Api:Tag'`**
 
+**下面代码仅供参考，具体以 demo 中为准**
 
 ## 基础导航
 
