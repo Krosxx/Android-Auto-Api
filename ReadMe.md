@@ -21,7 +21,7 @@ implementation 'com.github.Krosxx.Android-Accessibility-Api:accessibility-api:4.
 <summary>🥤请喝阔乐 🥤（点击展开）</summary>
 
 <br/>
-如果觉得此仓库对您有帮助，请自由捐助吧～
+如果您觉得此仓库对您有帮助，欢迎给我捐赠～
 
 <br/>
 <img width=200 src="screenshots/alp.jpg"></img>
