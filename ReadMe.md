@@ -6,7 +6,7 @@
 
 > 安卓无障碍服务Api, 为了简化无障碍服务使用，并使用 Kotlin 以提供简洁的Api。  
 
-**交流q群：1042251052**
+**交流q群：1042251052**, 可有偿提供难度问题解决方案。
 
 <br>
 
@@ -15,6 +15,19 @@ implementation 'com.github.Krosxx.Android-Accessibility-Api:accessibility-api:4.
 **最新 library : `implementation 'com.github.Krosxx:Android-Auto-Api:Tag'`**
 
 **下面代码仅供参考，具体以 demo 中为准**
+
+
+<details>
+<summary>🥤请喝阔乐 🥤（点击展开）</summary>
+
+<br/>
+如果觉得此仓库对您有帮助，请自由捐助吧～
+
+<br/>
+<img width=200 src="screenshots/alp.jpg"></img>
+<img width=224 src="screenshots/wx.png"></img>
+
+</details>
 
 ## 基础导航
 
