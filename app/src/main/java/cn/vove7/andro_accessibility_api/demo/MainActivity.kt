@@ -43,6 +43,7 @@ class MainActivity : AppCompatActivity() {
             InstrumentationShotScreenAction(),
             SendImeAction(),
             ContinueGestureAction(),
+            ScreenshotAction(),
             object : Action() {
                 override val name = "Stop"
                 override suspend fun run(act: ComponentActivity) {

@@ -25,10 +25,11 @@ import cn.vove7.auto.core.utils.convert
 import cn.vove7.auto.core.utils.ensureNotInMainThread
 import cn.vove7.auto.core.utils.jumpAccessibilityServiceSettings
 import cn.vove7.auto.core.utils.whileWaitTime
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
+import java.util.concurrent.TimeoutException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlin.math.min
 import cn.vove7.auto.core.utils.GestureResultCallback as GestureCallback
 
@@ -97,27 +98,37 @@ abstract class AccessibilityApi : AccessibilityService(), AutoApi {
         PageUpdateMonitor.onAccessibilityEvent(event)
     }
 
-    override fun takeScreenshot(): Bitmap? {
+    override suspend fun takeScreenshot(displayId: Int): Bitmap? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             ensureNotInMainThread("takeScreenshot")
-            return runBlocking {
-                suspendCoroutine<Bitmap> { cont ->
-                    super.takeScreenshot(0, appCtx.mainExecutor, object : TakeScreenshotCallback {
-                        override fun onSuccess(screenshot: ScreenshotResult) {
-                            val bitmap = Bitmap.wrapHardwareBuffer(screenshot.hardwareBuffer, screenshot.colorSpace)
-                            if (bitmap != null) {
-                                cont.resume(bitmap)
-                            }
-                        }
+            return withTimeoutOrNull(5000) {
+                suspendCancellableCoroutine { cont ->
+                    try {
+                        super.takeScreenshot(
+                            displayId, appCtx.mainExecutor,
+                            object : TakeScreenshotCallback {
+                                override fun onSuccess(screenshot: ScreenshotResult) {
+                                    val bitmap = Bitmap.wrapHardwareBuffer(
+                                        screenshot.hardwareBuffer,
+                                        screenshot.colorSpace
+                                    )
+                                    if (bitmap != null) cont.resume(bitmap)
+                                    else cont.resumeWithException(
+                                        RuntimeException("takeScreenshot failed, npe.")
+                                    )
+                                }
 
-                        override fun onFailure(errorCode: Int) {
-                            cont.resumeWithException(RuntimeException("takeScreenshot failed, code: $errorCode"))
-                        }
-                    })
+                                override fun onFailure(errorCode: Int) {
+                                    cont.resumeWithException(RuntimeException("takeScreenshot failed, code: $errorCode"))
+                                }
+                            })
+                    } catch (e: Throwable) {
+                        cont.resumeWithException(RuntimeException("takeScreenshot failed", e))
+                    }
                 }
-            }
+            } ?: throw TimeoutException("takeScreenshot timeout.")
         } else {
-            Log.w("AccessibilityApi" , "takeScreenshot need Android 11+")
+            Log.w("AccessibilityApi", "takeScreenshot need Android 11+")
         }
         return null
     }
@@ -133,7 +144,8 @@ abstract class AccessibilityApi : AccessibilityService(), AutoApi {
         private var appCtx_: Context? = null
         val appCtx
             get() = appCtx_ ?: throw NullPointerException(
-                "please call AccessibilityApi.init(...) in Application.onCreate()")
+                "please call AccessibilityApi.init(...) in Application.onCreate()"
+            )
 
         fun init(
             ctx: Context,
@@ -223,7 +235,11 @@ abstract class AccessibilityApi : AccessibilityService(), AutoApi {
 
     }
 
-    override fun doGestureAsync(gesture: AutoGestureDescription, callback: GestureCallback?, handler: Handler?) {
+    override fun doGestureAsync(
+        gesture: AutoGestureDescription,
+        callback: GestureCallback?,
+        handler: Handler?
+    ) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
             throw IllegalStateException("dispatchGesture require android N+")
         }

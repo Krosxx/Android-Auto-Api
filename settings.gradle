@@ -1,5 +1,5 @@
 include ':accessibility-api'
 include ':app'
-rootProject.name = "Android-Accessibility-Api"
+rootProject.name = "Android-Auto-Api"
 include ':core'
 include ':uiauto'

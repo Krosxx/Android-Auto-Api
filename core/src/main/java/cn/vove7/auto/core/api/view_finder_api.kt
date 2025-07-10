@@ -108,31 +108,29 @@ fun buildLayoutInfo(
     sb: StringBuilder = StringBuilder(),
     includeInvisible: Boolean = true
 ): String {
-    ViewNode.getRoot().buildWithChild(0, 0, includeInvisible, sb)
+    ViewNode.getRoot().printWithChild(sb, includeInvisible)
     return sb.toString()
 }
 
-private fun ViewNode?.buildWithChild(
-    index: Int,
-    dep: Int,
-    includeInvisible: Boolean,
-    sb: StringBuilder
+fun ViewNode.printWithChild(
+    sb: StringBuilder,
+    includeGone: Boolean = true,
+    prefix: String = "",
+    level: Int = 0,
 ) {
-    if (this == null) {
-        sb.appendLine("*" * dep + "[" + index + "] null")
-        return
+    val d = "%02d".format(level)
+    if (level == 0) {
+        sb.appendLine("00[0/0] $d " + toString())
     }
-    if (!includeInvisible && !isVisibleToUser) {
-        sb.appendLine("*" * dep + "[" + index + "] " + "InVisible")
-        return
-    }
-    if (isVisibleToUser) {
-        sb.appendLine("*" * dep + "[" + index + "] " + toString())
-    } else {
-        sb.appendLine("*" * dep + "[" + index + "] " + toString())
-    }
+    val lastIndex = childCount - 1
     children.forEachIndexed { i, it ->
-        it.buildWithChild(i, dep + 1, includeInvisible, sb)
+        val isLast = i == lastIndex
+        val connector = if (isLast) " ┗ " else " ┣ "
+        if (includeGone || it?.isVisibleToUser == true) {
+            sb.appendLine("$d$prefix$connector[${i + 1}/${lastIndex + 1}] " + it.toString())
+        }
+        val newPrefix = prefix + if (isLast) "  " else " ┃ "
+        it?.printWithChild(sb, includeGone, newPrefix, level + 1)
     }
 }
 

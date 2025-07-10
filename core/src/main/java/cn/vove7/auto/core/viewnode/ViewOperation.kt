@@ -95,7 +95,7 @@ interface ViewOperation {
      * @param delay Int 用时
      * @return Boolean
      */
-    fun swipeOffset(dx: Int, dy: Int, delay: Int): Boolean
+    suspend fun swipeOffset(dx: Int, dy: Int, delay: Int): Boolean
 
     /**
      * 尝试长按，机制类似tryClick

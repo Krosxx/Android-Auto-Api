@@ -18,7 +18,6 @@ import cn.vove7.auto.core.utils.ensureActive
 import cn.vove7.auto.core.viewfinder.AcsNode
 import cn.vove7.auto.core.viewfinder.FinderConfig
 import cn.vove7.auto.core.viewfinder.SmartFinder
-import kotlinx.coroutines.runBlocking
 import java.lang.Thread.sleep
 
 /**
@@ -331,11 +330,9 @@ class ViewNode : ViewOperation {
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
-    override fun swipeOffset(dx: Int, dy: Int, delay: Int): Boolean {
+    override suspend fun swipeOffset(dx: Int, dy: Int, delay: Int): Boolean {
         val c = ScreenAdapter.getRelPoint(getCenterPoint())
-        return runBlocking {
-            cn.vove7.auto.core.api.swipe(c.x, c.y, c.x + dx, c.y + dy, delay)
-        }
+        return cn.vove7.auto.core.api.swipe(c.x, c.y, c.x + dx, c.y + dy, delay)
     }
 
     override fun focus(): Boolean {

@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.SparseArray
+import android.view.Display
 import android.view.InputEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
@@ -18,8 +19,10 @@ import cn.vove7.auto.core.utils.GestureResultCallback
 import cn.vove7.auto.core.utils.ensureNotInMainThread
 import cn.vove7.auto.core.utils.getApplication
 import java.lang.reflect.Proxy
+import java.util.concurrent.TimeoutException
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlin.jvm.Throws
 
 /**
  * # AutoApi
@@ -173,7 +176,9 @@ interface AutoApi {
     }
 
     // Accessibility 方式需要 Android 11+
-    fun takeScreenshot(): Bitmap?
+    // Instrumentation 不支持指定 displayId
+    @Throws(TimeoutException::class, RuntimeException::class)
+    suspend fun takeScreenshot(displayId: Int = Display.DEFAULT_DISPLAY): Bitmap?
 
     fun registerImpl() {
         setImpl(this)

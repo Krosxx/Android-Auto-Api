@@ -6,9 +6,19 @@ import android.app.UiAutomation
 import android.content.Context
 import android.graphics.Bitmap
 import android.hardware.display.DisplayManager
-import android.os.*
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
+import android.util.Log
 import android.util.SparseArray
-import android.view.*
+import android.view.Display
+import android.view.InputDevice
+import android.view.InputEvent
+import android.view.KeyCharacterMap
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.accessibility.AccessibilityEvent.TYPE_WINDOWS_CHANGED
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
@@ -20,7 +30,6 @@ import cn.vove7.auto.core.OnPageUpdate
 import cn.vove7.auto.core.PageUpdateMonitor
 import cn.vove7.auto.core.utils.AutoGestureDescription
 import cn.vove7.auto.core.utils.GestureResultCallback
-import kotlinx.coroutines.*
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -65,7 +74,7 @@ open class AutoInstrumentation : Instrumentation(), AutoApi {
         val si = uiAutomation.serviceInfo
         si.eventTypes = TYPE_WINDOWS_CHANGED
         si.flags = si.flags or AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS or
-            AccessibilityServiceInfo.FLAG_REQUEST_ENHANCED_WEB_ACCESSIBILITY
+                AccessibilityServiceInfo.FLAG_REQUEST_ENHANCED_WEB_ACCESSIBILITY
         si.feedbackType = AccessibilityServiceInfo.FEEDBACK_ALL_MASK
         si.packageNames = null
         onBuildServiceInfo(si)
@@ -95,7 +104,7 @@ open class AutoInstrumentation : Instrumentation(), AutoApi {
 
     override fun isEnabled(): Boolean {
         kotlin.runCatching {
-            if(!uiAutomation.injectInputEvent(MotionEvent.obtain(0, 0, 0, 0f, 0f, 0), false)){
+            if (!uiAutomation.injectInputEvent(MotionEvent.obtain(0, 0, 0, 0f, 0f, 0), false)) {
                 return false
             }
         }.onFailure {
@@ -121,9 +130,14 @@ open class AutoInstrumentation : Instrumentation(), AutoApi {
         callback: GestureResultCallback?,
         handler: Handler?
     ) {
-        val displayId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) gesture.displayId else 0
+        val displayId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) gesture.displayId
+        else Display.DEFAULT_DISPLAY
         val sampleTimeMs = calculateGestureSampleTimeMs(displayId)
-        val steps = AutoGestureDescription.MotionEventGenerator.getGestureStepsFromGestureDescription(gesture, sampleTimeMs)
+        val steps =
+            AutoGestureDescription.MotionEventGenerator.getGestureStepsFromGestureDescription(
+                gesture,
+                sampleTimeMs
+            )
         val seq = gestureSeq.getAndAdd(1)
         motionEventInjector.injectEvents(steps, seq, displayId) { _, success ->
             if (success) {
@@ -143,13 +157,17 @@ open class AutoInstrumentation : Instrumentation(), AutoApi {
 
     override fun sendKeyCode(keyCode: Int): Boolean {
         val eventTime = SystemClock.uptimeMillis()
-        val downEvent = KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN,
+        val downEvent = KeyEvent(
+            eventTime, eventTime, KeyEvent.ACTION_DOWN,
             keyCode, 0, 0, KeyCharacterMap.VIRTUAL_KEYBOARD, 0, 0,
-            InputDevice.SOURCE_KEYBOARD)
+            InputDevice.SOURCE_KEYBOARD
+        )
         if (uiAutomation.injectInputEvent(downEvent, false)) {
-            val upEvent = KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP,
+            val upEvent = KeyEvent(
+                eventTime, eventTime, KeyEvent.ACTION_UP,
                 keyCode, 0, 0, KeyCharacterMap.VIRTUAL_KEYBOARD, 0, 0,
-                InputDevice.SOURCE_KEYBOARD)
+                InputDevice.SOURCE_KEYBOARD
+            )
             if (uiAutomation.injectInputEvent(upEvent, false)) {
                 return true
             }
@@ -157,13 +175,21 @@ open class AutoInstrumentation : Instrumentation(), AutoApi {
         return false
     }
 
-    override fun takeScreenshot(): Bitmap? {
+    override suspend fun takeScreenshot(displayId: Int): Bitmap? {
+        if (displayId != Display.DEFAULT_DISPLAY) {
+            Log.w(
+                "AutoInstrumentation",
+                "takeScreenshot is not support specifying a displayId $displayId"
+            )
+        }
         return uiAutomation.takeScreenshot()
     }
 
     private fun calculateGestureSampleTimeMs(displayId: Int): Int {
-        val display: Display = (context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager).getDisplay(
-            displayId) ?: return 100
+        val display: Display =
+            (context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager).getDisplay(
+                displayId
+            ) ?: return 100
         val msPerSecond = 1000
         val sampleTimeMs = (msPerSecond / display.refreshRate).toInt()
         return if (sampleTimeMs < 1) {

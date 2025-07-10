@@ -106,7 +106,7 @@ interface FinderBuilderWithOperation : ViewOperation {
     override fun scrollLeft() = node.scrollLeft()
 
     @RequiresApi(Build.VERSION_CODES.N)
-    override fun swipeOffset(dx: Int, dy: Int, delay: Int) = node.swipeOffset(dx, dy, delay)
+    override suspend fun swipeOffset(dx: Int, dy: Int, delay: Int) = node.swipeOffset(dx, dy, delay)
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun scrollRight() = node.scrollRight()

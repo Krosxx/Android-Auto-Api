@@ -689,9 +689,28 @@ class ContinueGestureAction(override val name: String = "ContinueGesture") : Act
                 lineTo(startX, y)
             }, 0, 500, false
         )
-        r =  AutoApi.doGestureSync(s4.toDesc())
+        r = AutoApi.doGestureSync(s4.toDesc())
         Timber.i("4 $r")
         delay(500)
     }
 }
 
+class ScreenshotAction : Action() {
+
+    override val name: String
+        get() = "Screenshot"
+
+    override suspend fun run(act: ComponentActivity) {
+        val bm = AutoApi.takeScreenshot()
+
+        withContext(Dispatchers.Main) {
+            AlertDialog.Builder(act)
+                .setTitle("Screenshot Test")
+                .setView(ImageView(act).apply {
+                    setImageBitmap(bm)
+                })
+                .show()
+        }
+
+    }
+}
