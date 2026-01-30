@@ -19,7 +19,6 @@ import kotlinx.coroutines.ensureActive
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 import timber.log.Timber
 import java.util.Locale
-import kotlin.coroutines.coroutineContext
 import kotlin.math.max
 
 /**

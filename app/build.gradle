@@ -59,7 +59,7 @@ dependencies {
 
     testImplementation 'junit:junit:4.13.2'
     implementation 'androidx.test.uiautomator:uiautomator:2.3.0'
+    implementation project(':accessibility')
 
-    implementation project(':accessibility-api')
     implementation project(':uiauto')
 }
