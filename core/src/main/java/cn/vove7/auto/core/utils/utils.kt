@@ -13,6 +13,7 @@ import android.provider.Settings
 import androidx.annotation.RequiresApi
 import cn.vove7.auto.core.AutoApi
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import org.lsposed.hiddenapibypass.HiddenApiBypass
@@ -54,7 +55,7 @@ suspend fun <T> whileWaitTime(
 
 
 internal suspend inline fun ensureActive() {
-    coroutineContext.ensureActive()
+    currentCoroutineContext().ensureActive()
 }
 
 fun ensureNotInterrupt() {

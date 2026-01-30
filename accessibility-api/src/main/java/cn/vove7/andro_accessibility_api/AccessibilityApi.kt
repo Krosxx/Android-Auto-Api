@@ -6,6 +6,7 @@ import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Build
 import android.os.Handler
@@ -38,6 +39,7 @@ import cn.vove7.auto.core.utils.GestureResultCallback as GestureCallback
  *
  * Created by Vove on 2018/6/18
  */
+@SuppressLint("AccessibilityPolicy")
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class AccessibilityApi : AccessibilityService(), AutoApi {
 
@@ -79,6 +81,7 @@ abstract class AccessibilityApi : AccessibilityService(), AutoApi {
         return try {
             super.getRootInActiveWindow()
         } catch (e: Throwable) {
+            Log.e("AccessibilityApi", "getRootInActiveWindow occur error $e")
             e.printStackTrace()
             null
         }
@@ -143,13 +146,20 @@ abstract class AccessibilityApi : AccessibilityService(), AutoApi {
         @SuppressLint("StaticFieldLeak")
         private var appCtx_: Context? = null
         val appCtx
-            get() = appCtx_ ?: throw NullPointerException(
+            get() = appCtx_ ?: error(
                 "please call AccessibilityApi.init(...) in Application.onCreate()"
             )
 
         fun init(
             ctx: Context,
-            baseServiceCls: Class<*>,
+            baseServiceCls: Class<*> = Class.forName(
+                ctx.packageManager.getPackageInfo(
+                    ctx.packageName,
+                    PackageManager.GET_SERVICES
+                ).services?.find {
+                    it.permission == "android.permission.BIND_ACCESSIBILITY_SERVICE"
+                }?.name ?: error("ACCESSIBILITY_SERVICE not found")
+            ),
             gestureServiceCls: Class<*> = baseServiceCls
         ) {
             appCtx_ = ctx.applicationContext
@@ -241,7 +251,7 @@ abstract class AccessibilityApi : AccessibilityService(), AutoApi {
         handler: Handler?
     ) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-            throw IllegalStateException("dispatchGesture require android N+")
+            throw IllegalStateException("dispatchGesture require android N+ with AccessibilityService")
         }
         requireGesture.dispatchGesture(gesture.convert(), callback?.let { cb ->
             @RequiresApi(Build.VERSION_CODES.N)

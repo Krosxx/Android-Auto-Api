@@ -152,7 +152,7 @@ interface AutoApi {
                 override fun onCancelled(gestureDescription: AutoGestureDescription?) {
                     cont.resume(false)
                 }
-            }, Handler(Looper.getMainLooper()))
+            }, null)
         }
     }
 

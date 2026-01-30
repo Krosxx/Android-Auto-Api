@@ -38,6 +38,7 @@ import cn.vove7.auto.core.api.pullNotificationBar
 import cn.vove7.auto.core.api.quickSettings
 import cn.vove7.auto.core.api.recents
 import cn.vove7.auto.core.api.setScreenSize
+import cn.vove7.auto.core.api.swipe
 import cn.vove7.auto.core.api.waitForApp
 import cn.vove7.auto.core.api.withId
 import cn.vove7.auto.core.api.withText
@@ -154,6 +155,13 @@ class DrawableAction : Action() {
 
         // 设置相对屏幕 非必须
         setScreenSize(500, 500)
+
+        Timber.i("swipe 100")
+        swipe(100, 80, 400, 80, 100)
+        Timber.i("click 30")
+        click(300, 100)
+        delay(100)
+
         // 指定点转路径手势
         if (!gesture(
                 2000L, arrayOf(
@@ -279,7 +287,7 @@ class ViewFinderWithLambda : Action() {
 
     override suspend fun run(act: ComponentActivity) {
         val s = findAllWith {
-            Log.d(TAG, "${it.text} ${it.isClickable}")
+            Timber.tag(TAG).d("${it.text} ${it.isClickable}")
             it.isClickable
         }.joinToString("\n\n")
 
@@ -377,12 +385,9 @@ class TraverseAllAction : Action() {
     override val name = "递归搜索视图包含"
     override suspend fun run(act: ComponentActivity) {
 
-        Log.i(
-            "TraverseAllAction",
-            findAllWith {
-                it.contentDescription != null
-            }.joinToString("\n")
-        )
+        Timber.tag("TraverseAllAction").i(findAllWith {
+            it.contentDescription != null
+        }.joinToString("\n"))
         // assert = [ Bottom, SubView ]
 
     }
@@ -642,6 +647,8 @@ private suspend fun showSeekbarDialog(act: ComponentActivity) = withContext(Disp
 }
 
 class ContinueGestureAction(override val name: String = "ContinueGesture") : Action() {
+
+    @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun run(act: ComponentActivity) {
         showSeekbarDialog(act)
         delay(1000)
