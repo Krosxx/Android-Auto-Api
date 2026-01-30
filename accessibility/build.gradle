@@ -3,11 +3,12 @@ apply plugin: 'kotlin-android'
 apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
-    compileSdk 33
+    namespace 'cn.vove7.andro_accessibility_api'
+    compileSdk 34
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 33
+        targetSdkVersion 34
 
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -25,7 +26,9 @@ android {
     kotlin {
         jvmToolchain(11)
     }
-    namespace 'cn.vove7.andro_accessibility_api'
+    publishing {
+        singleVariant("release") {}
+    }
 }
 
 dependencies {
