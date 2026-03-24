@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package cn.vove7.auto.core.api
 
 import android.os.Build

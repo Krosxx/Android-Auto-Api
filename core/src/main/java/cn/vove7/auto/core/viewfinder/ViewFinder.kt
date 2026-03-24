@@ -25,6 +25,8 @@ abstract class ViewFinder<T : ViewFinder<T>>(
     private var rootCompat: Boolean = false
         get() = field && this.node == null
 
+    private var includeInvisible: Boolean = false
+
     /**
      * 等待搜索，在指定时间内循环搜索（视图更新），超时返回null
      * 等待View出现 同步 耗时操作
@@ -34,7 +36,6 @@ abstract class ViewFinder<T : ViewFinder<T>>(
     suspend fun waitFor(
         waitTime: Long = FinderConfig.FINDER_WAIT_MILLIS,
         interval: Long = FinderConfig.FINDER_WAIT_INTERVAL,
-        includeInvisible: Boolean = false
     ): ViewNode? {
         val wt = when {
             waitTime in 0..30000 -> waitTime
@@ -44,7 +45,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         val beginTime = System.currentTimeMillis()
         val endTime = beginTime + wt
         do {
-            val node = findFirst(includeInvisible)
+            val node = findFirst()
             if (node != null) return node
             if (FinderConfig.ENABLE_FIND_FAILED_STRATEGY) {
                 FinderConfig.onFindFailed?.invoke(this)
@@ -56,21 +57,18 @@ abstract class ViewFinder<T : ViewFinder<T>>(
     }
 
     @Throws(ViewNodeNotFoundException::class)
-    suspend fun requireFirst(includeInvisible: Boolean = false): ViewNode {
-        return findFirst(includeInvisible) ?: throw ViewNodeNotFoundException(this)
-    }
+    suspend fun requireFirst(): ViewNode =
+        findFirst() ?: throw ViewNodeNotFoundException(this)
 
     @Throws(ViewNodeNotFoundException::class)
-    fun requireFirstBlocking(includeInvisible: Boolean = false): ViewNode {
-        return findFirstBlocking(includeInvisible) ?: throw ViewNodeNotFoundException(this)
-    }
-
+    fun requireFirstBlocking(): ViewNode =
+        findFirstBlocking() ?: throw ViewNodeNotFoundException(this)
 
     /**
-     * @param includeInvisible Boolean 是否包含不可见元素
+     * 查找第一个
      * @return ViewNode?
      */
-    suspend fun findFirst(includeInvisible: Boolean = false): ViewNode? {
+    suspend fun findFirst(): ViewNode? {
         // 不可见
         return traverseAllNode(startNode, includeInvisible = includeInvisible).let {
             if (it == null && rootCompat) {
@@ -80,7 +78,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
     }
 
     @Throws(CancellationException::class)
-    fun findFirstBlocking(includeInvisible: Boolean = false): ViewNode? {
+    fun findFirstBlocking(): ViewNode? {
         return traverseAllNodeBlocking(startNode, includeInvisible = includeInvisible).let {
             if (it == null && rootCompat) {
                 traverseAllNodeBlocking(
@@ -91,45 +89,44 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         }
     }
 
-    //[findAll]
-    suspend fun find(includeInvisible: Boolean = false) = findAll(includeInvisible)
+    // [findAll]
+    suspend inline fun find() = findAll()
 
     @Throws(ViewNodeNotFoundException::class)
     suspend fun require(
         waitMillis: Long = FinderConfig.FINDER_WAIT_MILLIS,
         interval: Long = FinderConfig.FINDER_WAIT_INTERVAL,
-        includeInvisible: Boolean = false
-    ): ViewNode {
-        return waitFor(waitMillis, interval, includeInvisible)
-            ?: throw ViewNodeNotFoundException(this)
-    }
+    ): ViewNode = waitFor(waitMillis, interval)
+        ?: throw ViewNodeNotFoundException(this)
 
-    suspend fun exist(includeInvisible: Boolean = false): Boolean =
-        findFirst(includeInvisible) != null
+    suspend fun exist(): Boolean = findFirst() != null
 
-    fun existBlocking(includeInvisible: Boolean = false): Boolean =
-        findFirstBlocking(includeInvisible) != null
+    fun existBlocking(): Boolean = findFirstBlocking() != null
 
-    @Suppress("UNCHECKED_CAST")
     fun enableRootCompat(): T {
         rootCompat = true
+        @Suppress("UNCHECKED_CAST")
+        return this as T
+    }
+
+    fun includeInvisible(ii: Boolean = true): T {
+        includeInvisible = ii
+        @Suppress("UNCHECKED_CAST")
         return this as T
     }
 
     /**
-     *
-     * @param includeInvisible Boolean 是否包含不可见元素
-     * @return Array<ViewNode> 无结果则返回空
+     * 查找全部符合条件的 Node
+     * @return List<ViewNode> 无结果则返回空
      */
-    suspend fun findAll(includeInvisible: Boolean = false): Array<ViewNode> {
+    suspend fun findAll(): List<ViewNode> {
         val l = mutableListOf<ViewNode>()
-        traverseAllNode(startNode, l, includeInvisible)
+        traverseAllNode(startNode, includeInvisible, l)
         if (l.isEmpty() && rootCompat) {
-            traverseAllNode(ViewNode.activeWinNode(), l, includeInvisible)
+            traverseAllNode(ViewNode.activeWinNode(), includeInvisible, l)
         }
-        return l.toTypedArray()
+        return l
     }
-
 
     /**
      * 深搜遍历
@@ -140,8 +137,10 @@ abstract class ViewFinder<T : ViewFinder<T>>(
      * @return ViewNode?
      */
     private suspend fun traverseAllNode(
-        node: ViewNode?, list: MutableList<ViewNode>? = null,
-        includeInvisible: Boolean = false, depth: Int = 0,
+        node: ViewNode?,
+        includeInvisible: Boolean = false,
+        list: MutableList<ViewNode>? = null,
+        depth: Int = 0,
         nodeSet: MutableSet<AcsNode> = mutableSetOf()
     ): ViewNode? {
         ensureActive()
@@ -161,7 +160,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
                     list.add(childNode)
                 } else return childNode
             }
-            val r = traverseAllNode(childNode, list, includeInvisible, depth + 1)
+            val r = traverseAllNode(childNode, includeInvisible, list, depth + 1)
             if (list == null && r != null) {
                 return r
             }
@@ -217,9 +216,11 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         } ?: false
     }
 
-    suspend fun await() = waitFor()
-
-    suspend fun await(l: Long): ViewNode? = waitFor(l)
+    // [waitFor]
+    suspend fun await(
+        waitTime: Long = FinderConfig.FINDER_WAIT_MILLIS,
+        interval: Long = FinderConfig.FINDER_WAIT_INTERVAL,
+    ): ViewNode? = waitFor(waitTime, interval)
 
     /**
      * 查找条件

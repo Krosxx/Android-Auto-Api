@@ -7,7 +7,6 @@ import androidx.annotation.RequiresApi
 import cn.vove7.auto.core.viewfinder.AcsNode
 import cn.vove7.auto.core.viewfinder.ConditionGroup
 import cn.vove7.auto.core.viewfinder.SF
-import cn.vove7.auto.core.viewfinder.SmartFinder
 import cn.vove7.auto.core.viewfinder.containsText
 import cn.vove7.auto.core.viewfinder.desc
 import cn.vove7.auto.core.viewfinder.editable
@@ -145,27 +144,30 @@ fun ViewNode.printWithChild(
 suspend fun findWith(
     includeInvisible: Boolean = false,
     predicate: (AcsNode) -> Boolean
-): ViewNode? {
-    return SF.where(predicate).findFirst(includeInvisible)
-}
+): ViewNode? = SF.where(predicate)
+    .includeInvisible(includeInvisible)
+    .findFirst()
+
 
 suspend fun findAllWith(
     includeInvisible: Boolean = false,
     predicate: (AcsNode) -> Boolean
-): Array<ViewNode> {
-    return SF.where(predicate).findAll(includeInvisible)
-}
+): List<ViewNode> = SF.where(predicate)
+    .includeInvisible(includeInvisible)
+    .findAll()
 
 suspend fun ViewNode.findWith(
     includeInvisible: Boolean = false,
     predicate: (AcsNode) -> Boolean
-): ViewNode? {
-    return SmartFinder(this).where(predicate).findFirst(includeInvisible)
-}
+): ViewNode? = finder()
+    .where(predicate)
+    .includeInvisible(includeInvisible)
+    .findFirst()
 
 suspend fun ViewNode.findAllWith(
     includeInvisible: Boolean = false,
     predicate: (AcsNode) -> Boolean
-): Array<ViewNode> {
-    return SmartFinder(this).where(predicate).findAll(includeInvisible)
-}
+): List<ViewNode> = finder().where(predicate)
+    .includeInvisible(includeInvisible)
+    .findAll()
+
