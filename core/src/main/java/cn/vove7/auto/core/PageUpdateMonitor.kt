@@ -44,12 +44,6 @@ object PageUpdateMonitor : UiAutomation.OnAccessibilityEventListener {
                     updateCurrentApp(pkg, classNameStr.toString())
                 }
             }
-            if (event.text.isNotEmpty()) {
-                if (event.text[0] != null) {
-                    val mLastActivityName = event.className
-                    Log.d("mLastActivityName", "mLastActivityName $mLastActivityName")
-                }
-            }
         }
     }
 
