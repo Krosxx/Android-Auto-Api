@@ -25,7 +25,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
     private var rootCompat: Boolean = false
         get() = field && this.node == null
 
-    private var includeInvisible: Boolean = false
+    private var includeInvisible: Boolean = FinderConfig.FINDER_INCLUDE_INVISIBLE
 
     /**
      * 等待搜索，在指定时间内循环搜索（视图更新），超时返回null

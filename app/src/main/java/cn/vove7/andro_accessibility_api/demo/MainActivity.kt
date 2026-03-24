@@ -49,6 +49,7 @@ class MainActivity : AppCompatActivity() {
             SendImeAction(),
             ContinueGestureAction(),
             ScreenshotAction(),
+            InVisibleTest(),
             object : Action() {
                 override val name = "Stop"
                 override suspend fun run(act: ComponentActivity) {

@@ -10,9 +10,13 @@ import android.util.Pair
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.View
 import android.view.inputmethod.EditorInfo
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.SeekBar
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
@@ -719,5 +723,38 @@ class ScreenshotAction : Action() {
                 .show()
         }
 
+    }
+}
+
+class InVisibleTest : Action() {
+    override val name: String get() = "InVisibleTest"
+
+    override suspend fun run(act: ComponentActivity) {
+        withContext(Dispatchers.Main) {
+            AlertDialog.Builder(act)
+                .setTitle("Screenshot Test")
+                .setView(
+                    ScrollView(act).apply {
+                        addView(LinearLayout(act).apply {
+                            orientation = LinearLayout.VERTICAL
+                            repeat(30) { i ->
+                                addView(Button(act).apply {
+                                    //visibility = if (i % 2 == 0) View.VISIBLE else View.INVISIBLE
+                                    text = "$i"
+                                })
+                            }
+                        })
+                    }
+                )
+                .show()
+        }
+        delay(200)
+        val vis = withType("Button").findAll().joinToString("\n", "\n") { it.toString() }
+        Timber.i("VIS $vis")
+        val all =
+            withType("Button")
+                .includeInvisible()
+                .findAll().joinToString("\n") { it.toString() }
+        Timber.i("ALL $all")
     }
 }

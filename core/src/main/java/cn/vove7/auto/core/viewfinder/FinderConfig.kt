@@ -5,6 +5,8 @@ object FinderConfig {
     // ViewFinder.require timeout millis
     var FINDER_WAIT_MILLIS = 3000L
     var FINDER_WAIT_INTERVAL = 20L
+    // Global default includeInvisible
+    var FINDER_INCLUDE_INVISIBLE = false
 
     // ViewNode.performAction number of attempts
     var TRY_OP_CNT = 10
