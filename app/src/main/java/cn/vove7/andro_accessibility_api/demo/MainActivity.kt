@@ -2,8 +2,11 @@ package cn.vove7.andro_accessibility_api.demo
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.view.WindowInsets
+import android.view.WindowInsetsController
 import android.widget.ArrayAdapter
 import androidx.activity.ComponentActivity
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import cn.vove7.andro_accessibility_api.AccessibilityApi
 import cn.vove7.andro_accessibility_api.demo.actions.*
@@ -21,7 +24,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(binding.root)
+
 
         val actions = mutableListOf(
             BaseNavigatorAction(),

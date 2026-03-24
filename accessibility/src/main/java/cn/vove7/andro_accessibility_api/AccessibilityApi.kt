@@ -16,7 +16,7 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
 import androidx.annotation.RequiresApi
-import cn.vove7.auto.core.AppScope
+import cn.vove7.auto.core.AppPageInfo
 import cn.vove7.auto.core.AutoApi
 import cn.vove7.auto.core.OnPageUpdate
 import cn.vove7.auto.core.PageUpdateMonitor
@@ -91,7 +91,7 @@ abstract class AccessibilityApi : AccessibilityService(), AutoApi {
      * Activity or Dialog update
      * @param currentScope AppScope
      */
-    open fun onPageUpdate(currentScope: AppScope) {}
+    open fun onPageUpdate(currentScope: AppPageInfo) {}
 
     /**
      * @param event AccessibilityEvent?

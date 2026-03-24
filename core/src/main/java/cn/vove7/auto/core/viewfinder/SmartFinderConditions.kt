@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import cn.vove7.auto.core.utils.compareSimilarity
+import cn.vove7.auto.core.viewnode.ViewNode
 
 /**
  * # SmartFinderConditions
@@ -60,7 +61,8 @@ class PackageCondition(private val names: Array<out CharSequence>) : MatchCondit
     }
 }
 
-fun ConditionGroup.packageName(vararg packageNames: CharSequence) = link(PackageCondition(packageNames))
+fun ConditionGroup.packageName(vararg packageNames: CharSequence) =
+    link(PackageCondition(packageNames))
 
 
 class TextEqCondition(private val texts: Array<out String>) : MatchCondition {
@@ -80,6 +82,16 @@ class TextEqCondition(private val texts: Array<out String>) : MatchCondition {
 
 fun ConditionGroup.text(vararg texts: String) = link(TextEqCondition(texts))
 fun text(vararg texts: String) = TextEqCondition(texts)
+
+class HashCondition(private val hash: String) : MatchCondition {
+    override fun invoke(node: AcsNode): Boolean {
+        val nodeHash = "0x" + Integer.toHexString(node.hashCode())
+        return nodeHash == hash
+    }
+}
+
+fun ConditionGroup.hash(hash: String) = link(HashCondition(hash))
+fun hash(vararg texts: String) = TextEqCondition(texts)
 
 object _id {
     operator fun rangeTo(s: String) = _desc.eq(s)
@@ -417,7 +429,6 @@ class TextStartWithsCondition(val text: String) : MatchCondition {
 
 fun ConditionGroup.descStartWiths(desc: String) = link(DescStartWithsCondition(desc))
 fun ConditionGroup.textStartWiths(text: String) = link(TextStartWithsCondition(text))
-
 
 
 //

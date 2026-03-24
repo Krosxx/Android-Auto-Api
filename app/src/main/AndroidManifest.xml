@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
     <queries>
         <package android:name="com.android.chrome" />
     </queries>
@@ -17,6 +20,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <uses-library android:name="android.test.runner" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -30,9 +34,9 @@
 
         <service
             android:name=".service.AppAccessibilityService"
-            android:exported="false"
             android:description="@string/base_ser_desc"
-            android:label="Accessibility-Api Demo"
+            android:exported="false"
+            android:label="@string/app_name"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
@@ -44,7 +48,9 @@
         </service>
 
 
-        <service android:name=".service.ForegroundService" />
+        <service
+            android:name=".service.ForegroundService"
+            android:foregroundServiceType="specialUse" />
 
     </application>
 

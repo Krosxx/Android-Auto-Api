@@ -284,7 +284,7 @@ class ViewNode : ViewOperation {
         }
 
     override var progress: Float
-        get() = node.rangeInfo.current
+        get() = node.rangeInfo?.current ?: -1f
         @RequiresApi(Build.VERSION_CODES.N)
         set(value) {
             node.performAction(
@@ -383,7 +383,8 @@ class ViewNode : ViewOperation {
             if (!node.isEnabled) append(", Disabled")
             if (node.isPassword) append(", Password")
             if (node.isCheckable) append(", Checkable")
-            if (node.isChecked) append(", Checked")
+            if (node.isChecked) append(", isChecked")
+            if (node.checked == 1) append(", Checked")
             if (node.isFocusable) append(", Focusable")
             if (node.isScreenReaderFocusable) append(", ReaderFocusable")
             if (node.isFocused) append(", Focused")
@@ -391,11 +392,13 @@ class ViewNode : ViewOperation {
             if (node.isDismissable) append(", Dismissable")
             if (node.isAccessibilityFocused) append(", AccessibilityFocused")
             if (node.canOpenPopup()) append(", CanOpenPopup")
-            append(", hash: 0x")
-            append(Integer.toHexString(node.hashCode()))
+            append(", hash: $hash")
             append(" }")
         }
     }
+
+    override val hash: String
+        get() = "0x" + Integer.toHexString(node.hashCode())
 
     /**
      * 从该节点搜索 SmartFinder

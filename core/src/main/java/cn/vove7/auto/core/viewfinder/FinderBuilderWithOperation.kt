@@ -149,6 +149,6 @@ interface FinderBuilderWithOperation : ViewOperation {
     override suspend fun findByDepths(vararg depths: Int): ViewNode? =
         node.findByDepths(*depths)
 
-    override val isShowingHint: Boolean
-        get() = node.isShowingHint
+    override val isShowingHint: Boolean get() = node.isShowingHint
+    override val hash: String get() = node.hash
 }

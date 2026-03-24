@@ -4,15 +4,14 @@ package cn.vove7.auto.core.api
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import cn.vove7.auto.core.utils.times
 import cn.vove7.auto.core.viewfinder.AcsNode
 import cn.vove7.auto.core.viewfinder.ConditionGroup
 import cn.vove7.auto.core.viewfinder.SF
 import cn.vove7.auto.core.viewfinder.SmartFinder
-import cn.vove7.auto.core.viewfinder.ViewFinder
 import cn.vove7.auto.core.viewfinder.containsText
 import cn.vove7.auto.core.viewfinder.desc
 import cn.vove7.auto.core.viewfinder.editable
+import cn.vove7.auto.core.viewfinder.hash
 import cn.vove7.auto.core.viewfinder.id
 import cn.vove7.auto.core.viewfinder.matchText
 import cn.vove7.auto.core.viewfinder.text
@@ -44,6 +43,15 @@ fun withId(id: String): ConditionGroup {
  */
 fun withText(vararg text: String): ConditionGroup {
     return SF.text(*text)
+}
+
+/**
+ * Hash 匹配
+ * @see ViewNode.hash
+ * @return ViewFindBuilder
+ */
+fun withHash(hash: String): ConditionGroup {
+    return SF.hash(hash)
 }
 
 /**

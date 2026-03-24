@@ -17,7 +17,7 @@ interface ViewOperation {
     val packageName: String?
 
     val simpleName: String?
-        get() = className?.let { it.substring(it.lastIndexOf('.') + 1) }
+        get() = className?.substringAfterLast(".")
 
 
     /**
@@ -61,10 +61,12 @@ interface ViewOperation {
     val previousSibling: ViewNode?
     val nextSibling: ViewNode?
 
-    val requirePrevSibling get() = previousSibling
-        ?: throw NullPointerException("previousSibling is null of $this")
-    val requireNextSibling get() = nextSibling
-        ?: throw NullPointerException("nextSibling is null of $this")
+    val requirePrevSibling
+        get() = previousSibling
+            ?: throw NullPointerException("previousSibling is null of $this")
+    val requireNextSibling
+        get() = nextSibling
+            ?: throw NullPointerException("nextSibling is null of $this")
 
     val requireParent: ViewNode
         get() {
@@ -205,5 +207,7 @@ interface ViewOperation {
     fun sendImeAction(): Boolean
 
     val isShowingHint: Boolean
+
+    val hash: String
 
 }

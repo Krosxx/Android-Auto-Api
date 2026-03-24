@@ -6,7 +6,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Build
 import android.os.Handler
-import android.os.Looper
 import android.util.SparseArray
 import android.view.Display
 import android.view.InputEvent
@@ -22,7 +21,6 @@ import java.lang.reflect.Proxy
 import java.util.concurrent.TimeoutException
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-import kotlin.jvm.Throws
 
 /**
  * # AutoApi
@@ -119,9 +117,12 @@ interface AutoApi {
     fun screenShot(): Boolean =
         performAction(AccessibilityService.GLOBAL_ACTION_TAKE_SCREENSHOT)
 
-    val currentScope: AppScope?
+    @Deprecated("use currentPageInfo", ReplaceWith("currentPageInfo"))
+    val currentScope: AppPageInfo? get() = currentPageInfo
+
+    val currentPageInfo: AppPageInfo?
         get() = requireImpl().let {
-            PageUpdateMonitor.currentScope
+            PageUpdateMonitor.currentAppPageInfo
         }
 
     // activity or dialog

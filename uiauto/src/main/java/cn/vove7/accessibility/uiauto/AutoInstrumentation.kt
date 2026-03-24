@@ -24,7 +24,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
 import androidx.annotation.CallSuper
 import androidx.annotation.RequiresApi
-import cn.vove7.auto.core.AppScope
+import cn.vove7.auto.core.AppPageInfo
 import cn.vove7.auto.core.AutoApi
 import cn.vove7.auto.core.OnPageUpdate
 import cn.vove7.auto.core.PageUpdateMonitor
@@ -100,7 +100,7 @@ open class AutoInstrumentation : Instrumentation(), AutoApi {
 
     }
 
-    open fun onPageUpdate(currentScope: AppScope) {}
+    open fun onPageUpdate(currentScope: AppPageInfo) {}
 
     override fun isEnabled(): Boolean {
         kotlin.runCatching {

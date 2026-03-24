@@ -2,7 +2,7 @@ package cn.vove7.auto.core.api
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import cn.vove7.auto.core.AppScope
+import cn.vove7.auto.core.AppPageInfo
 import cn.vove7.auto.core.AutoApi
 import cn.vove7.auto.core.utils.whileWaitTime
 import kotlin.math.min
@@ -37,10 +37,10 @@ fun screenShot(): Boolean = AutoApi.screenShot()
 fun splitScreen(): Boolean = AutoApi.splitScreen()
 
 suspend fun waitForApp(pkg: String, waitTime: Long = 30000): Boolean {
-    return waitForPage(AppScope(pkg, ""), waitTime)
+    return waitForPage(AppPageInfo(pkg, ""), waitTime)
 }
 
-suspend fun waitForPage(scope: AppScope, waitTime: Long = 30000): Boolean {
+suspend fun waitForPage(scope: AppPageInfo, waitTime: Long = 30000): Boolean {
     return whileWaitTime(min(waitTime, 30000), 100) {
         if (AutoApi.currentScope == scope) true
         else null

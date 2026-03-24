@@ -1,6 +1,7 @@
 package cn.vove7.auto.core
 
 import android.app.UiAutomation
+import android.util.Log
 import android.view.View
 import android.view.accessibility.AccessibilityEvent
 import kotlinx.coroutines.GlobalScope
@@ -14,13 +15,13 @@ import java.util.*
  * @date 2023/4/25
  */
 
-typealias OnPageUpdate = (score: AppScope) -> Unit
+typealias OnPageUpdate = (score: AppPageInfo) -> Unit
 
 object PageUpdateMonitor : UiAutomation.OnAccessibilityEventListener {
 
     var enableListenPageUpdate: Boolean = true
 
-    internal var currentScope: AppScope? = null
+    internal var currentAppPageInfo: AppPageInfo? = null
 
     private val onPageUpdateListeners = Collections.synchronizedList<OnPageUpdate>(arrayListOf())
 
@@ -43,17 +44,23 @@ object PageUpdateMonitor : UiAutomation.OnAccessibilityEventListener {
                     updateCurrentApp(pkg, classNameStr.toString())
                 }
             }
+            if (event.text.isNotEmpty()) {
+                if (event.text[0] != null) {
+                    val mLastActivityName = event.className
+                    Log.d("mLastActivityName", "mLastActivityName $mLastActivityName")
+                }
+            }
         }
     }
 
 
     /**
-     * 更新当前[currentScope]
+     * 更新当前[currentAppPageInfo]
      * @param pkg String
      * @param pageName String Activity or Dialog
      */
     private fun updateCurrentApp(pkg: String, pageName: String) {
-        if (currentScope?.packageName == pkg && pageName == currentScope?.pageName) {
+        if (currentAppPageInfo?.packageName == pkg && pageName == currentAppPageInfo?.pageName) {
             return
         }
         if (
@@ -65,14 +72,14 @@ object PageUpdateMonitor : UiAutomation.OnAccessibilityEventListener {
             return
         }
 
-        currentScope = currentScope?.also {
+        currentAppPageInfo = currentAppPageInfo?.also {
             it.pageName = pageName
             it.packageName = pkg
-        } ?: AppScope(pkg, pageName)
-        onPageUpdate(currentScope!!)
+        } ?: AppPageInfo(pkg, pageName)
+        onPageUpdate(currentAppPageInfo!!)
     }
 
-    private fun onPageUpdate(currentScope: AppScope) {
+    private fun onPageUpdate(currentScope: AppPageInfo) {
         onPageUpdateListeners.forEach { it.invoke(currentScope) }
     }
 

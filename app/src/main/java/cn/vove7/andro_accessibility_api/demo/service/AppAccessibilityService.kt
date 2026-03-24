@@ -2,7 +2,7 @@ package cn.vove7.andro_accessibility_api.demo.service
 
 import android.util.Log
 import cn.vove7.andro_accessibility_api.AccessibilityApi
-import cn.vove7.auto.core.AppScope
+import cn.vove7.auto.core.AppPageInfo
 
 /**
  * # MyAccessibilityService
@@ -28,7 +28,7 @@ class AppAccessibilityService : AccessibilityApi() {
     }
 
     //页面更新回调
-    override fun onPageUpdate(currentScope: AppScope) {
+    override fun onPageUpdate(currentScope: AppPageInfo) {
         Log.d(TAG, "onPageUpdate: $currentScope")
     }
 
