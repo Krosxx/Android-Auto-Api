@@ -171,12 +171,12 @@ abstract class ViewFinder<T : ViewFinder<T>>(
     private fun traverseAllNodeBlocking(
         node: ViewNode?, list: MutableList<ViewNode>? = null,
         includeInvisible: Boolean = false, depth: Int = 0,
-        nodeSet: MutableSet<AcsNode> = mutableSetOf()
+        nodeSet: MutableSet<Int> = mutableSetOf()
     ): ViewNode? {
         ensureNotInterrupt()
         node ?: return null
-        if (node.node in nodeSet) return null
-        nodeSet.add(node.node)
+        if (node.hashCode() in nodeSet) return null
+        nodeSet.add(node.hashCode())
         node.children.forEach { childNode ->
             ensureNotInterrupt()
             if (childNode == null) {

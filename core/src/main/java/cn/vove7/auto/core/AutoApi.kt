@@ -17,6 +17,7 @@ import cn.vove7.auto.core.utils.AutoServiceUnavailableException
 import cn.vove7.auto.core.utils.GestureResultCallback
 import cn.vove7.auto.core.utils.ensureNotInMainThread
 import cn.vove7.auto.core.utils.getApplication
+import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Proxy
 import java.util.concurrent.TimeoutException
 import kotlin.coroutines.resume
@@ -43,8 +44,11 @@ fun requireImpl(): AutoApi {
 fun buildProxy(): AutoApi = Proxy.newProxyInstance(
     getApplication().classLoader, arrayOf(AutoApi::class.java)
 ) { _, method, args ->
-    if (args == null) method?.invoke(requireImpl())
-    else method?.invoke(requireImpl(), *args)
+    try {
+        method.invoke(requireImpl(), *args.orEmpty())
+    } catch (e: InvocationTargetException) {
+        throw e.cause ?: e
+    }
 } as AutoApi
 
 

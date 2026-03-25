@@ -192,8 +192,8 @@ abstract class AccessibilityApi : AccessibilityService(), AutoApi {
                 gestureService!!
             }
 
-        // currentAppScope
-        val currentScope get() = AutoApi.currentScope
+        @Deprecated("use AutoApi.currentPageInfo")
+        val currentScope get() = AutoApi.currentPageInfo
 
         // Service is enable
         val isBaseServiceEnable: Boolean
