@@ -14,8 +14,8 @@ package cn.vove7.auto.core
 class AppScope(packageName: String, pageName: String) : AppPageInfo(packageName, pageName)
 
 open class AppPageInfo(
-    var packageName: String,
-    var pageName: String
+    val packageName: String,
+    val pageName: String
 ) {
     override fun equals(other: Any?): Boolean {
         if (other == null || other !is AppPageInfo) return false

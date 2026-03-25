@@ -1,12 +1,13 @@
 package cn.vove7.auto.core
 
 import android.app.UiAutomation
-import android.util.Log
 import android.view.View
 import android.view.accessibility.AccessibilityEvent
+import cn.vove7.auto.core.PageUpdateMonitor.currentAppPageInfo
+import cn.vove7.auto.core.viewnode.ViewNode
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.Collections
 
 /**
  * # PageUpdateMonitor
@@ -54,6 +55,11 @@ object PageUpdateMonitor : UiAutomation.OnAccessibilityEventListener {
      * @param pageName String Activity or Dialog
      */
     private fun updateCurrentApp(pkg: String, pageName: String) {
+        val actPkg = ViewNode.activeWinNode()?.packageName
+        if (actPkg != null && actPkg != pkg) {
+            // 忽略非 active 窗口
+            return
+        }
         if (currentAppPageInfo?.packageName == pkg && pageName == currentAppPageInfo?.pageName) {
             return
         }
@@ -65,12 +71,10 @@ object PageUpdateMonitor : UiAutomation.OnAccessibilityEventListener {
         ) {
             return
         }
-
-        currentAppPageInfo = currentAppPageInfo?.also {
-            it.pageName = pageName
-            it.packageName = pkg
-        } ?: AppPageInfo(pkg, pageName)
-        onPageUpdate(currentAppPageInfo!!)
+        AppPageInfo(pkg, pageName).also {
+            currentAppPageInfo = it
+            onPageUpdate(it)
+        }
     }
 
     private fun onPageUpdate(currentScope: AppPageInfo) {
