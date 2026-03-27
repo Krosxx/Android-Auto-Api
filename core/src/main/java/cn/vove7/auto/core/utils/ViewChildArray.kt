@@ -8,8 +8,7 @@ import cn.vove7.auto.core.viewnode.ViewNode
  * @author Vove
  * @date 2023/2/11
  */
-class ViewChildList constructor(val node: ViewNode?) : ArrayList<ViewNode?>(node?.childCount ?: 0) {
-
+class ViewChildList(val node: ViewNode?) : ArrayList<ViewNode?>(node?.childCount ?: 0) {
     constructor() : this(null)
 
     init {

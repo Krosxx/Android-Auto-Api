@@ -2,11 +2,8 @@
 
 package cn.vove7.auto.core.viewfinder
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import cn.vove7.auto.core.utils.compareSimilarity
-import cn.vove7.auto.core.viewnode.ViewNode
 
 /**
  * # SmartFinderConditions
@@ -22,12 +19,8 @@ private fun requireNotEmpty(list: Array<*>) {
 }
 
 class IdCondition(private val targetId: String) : MatchCondition {
-    override fun invoke(node: AcsNode): Boolean {
-        val vid = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            node.viewIdResourceName ?: return false
-        } else {
-            return false
-        }
+    override fun match(node: AcsNode): Boolean {
+        val vid = node.viewIdResourceName ?: return false
         return vid.endsWith("/$targetId", true) || vid.equals(targetId, true)
     }
 
@@ -38,12 +31,8 @@ fun ConditionGroup.id(id: String) = link(IdCondition(id))
 fun id(id: String) = IdCondition(id)
 
 class IdSCondition(private val targetIds: Array<out String>) : MatchCondition {
-    override fun invoke(node: AcsNode): Boolean {
-        val vid = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            node.viewIdResourceName ?: return false
-        } else {
-            return false
-        }
+    override fun match(node: AcsNode): Boolean {
+        val vid = node.viewIdResourceName ?: return false
         return targetIds.any { id ->
             vid.endsWith("/$id", true) || vid.equals(id, true)
         }
@@ -56,8 +45,14 @@ fun ConditionGroup.ids(vararg id: String) = link(IdSCondition(id))
 
 
 class PackageCondition(private val names: Array<out CharSequence>) : MatchCondition {
-    override fun invoke(node: AcsNode): Boolean {
+    override val canInterrupt = true
+
+    override fun match(node: AcsNode): Boolean {
         return node.packageName in names
+    }
+
+    override fun toString(): String {
+        return "Package in ${names.contentToString()}"
     }
 }
 
@@ -70,7 +65,7 @@ class TextEqCondition(private val texts: Array<out String>) : MatchCondition {
         requireNotEmpty(texts)
     }
 
-    override fun invoke(node: AcsNode) = node.text?.toString()?.let {
+    override fun match(node: AcsNode) = node.text?.toString()?.let {
         texts.any { t -> t.equals(it, ignoreCase = true) }
     } ?: false
 
@@ -84,7 +79,7 @@ fun ConditionGroup.text(vararg texts: String) = link(TextEqCondition(texts))
 fun text(vararg texts: String) = TextEqCondition(texts)
 
 class HashCondition(private val hash: String) : MatchCondition {
-    override fun invoke(node: AcsNode): Boolean {
+    override fun match(node: AcsNode): Boolean {
         val nodeHash = "0x" + Integer.toHexString(node.hashCode())
         return nodeHash == hash
     }
@@ -115,7 +110,7 @@ abstract class RegexCondition(regex: String) : MatchCondition {
     abstract fun AcsNode.nodeText(): String?
     internal val reg = regex.toRegex()
 
-    override fun invoke(node: AcsNode) =
+    override fun match(node: AcsNode) =
         node.nodeText()?.let {
             reg.matches(it)
         } ?: false
@@ -135,7 +130,7 @@ class ContainTextCondition(private val texts: Array<out String>) : MatchConditio
         requireNotEmpty(texts)
     }
 
-    override fun invoke(node: AcsNode) = node.text?.toString()?.let {
+    override fun match(node: AcsNode) = node.text?.toString()?.let {
         texts.any { t -> it.contains(t, ignoreCase = true) }
     } ?: false
 
@@ -151,7 +146,7 @@ class SimilarityTextCondition(
     private val text: String,
     private val limit: Float
 ) : MatchCondition {
-    override fun invoke(node: AcsNode): Boolean {
+    override fun match(node: AcsNode): Boolean {
         return compareSimilarity(node.text?.toString() ?: "", text) >= limit
     }
 
@@ -167,7 +162,7 @@ class SimilarityDescCondition(
     private val text: String,
     private val limit: Float
 ) : MatchCondition {
-    override fun invoke(node: AcsNode): Boolean {
+    override fun match(node: AcsNode): Boolean {
         return compareSimilarity(node.contentDescription?.toString() ?: "", text) >= limit
     }
 
@@ -184,7 +179,7 @@ class DescEqCondition(private val texts: Array<out String>) : MatchCondition {
         requireNotEmpty(texts)
     }
 
-    override fun invoke(node: AcsNode) = texts.any {
+    override fun match(node: AcsNode) = texts.any {
         it.equals(node.contentDescription?.toString(), ignoreCase = true)
     }
 
@@ -201,13 +196,13 @@ class ContainDescCondition(private val texts: Array<out String>) : MatchConditio
         requireNotEmpty(texts)
     }
 
-    override fun invoke(node: AcsNode) = node.contentDescription?.toString()?.let {
+    override fun match(node: AcsNode) = node.contentDescription?.toString()?.let {
         texts.any { t -> it.contains(t) }
     } ?: false
 
     override fun toString() = if (texts.size == 1)
         "DESC contains ${texts.first()}"
-    else "DESC any contains ${texts.contentToString()}"
+    else "DESC contains any ${texts.contentToString()}"
 }
 
 fun ConditionGroup.containsDesc(vararg desc: String) = link(ContainDescCondition(desc))
@@ -221,8 +216,8 @@ class TextOrDescEqCondition(private val texts: Array<out String>) : MatchConditi
     private val tm = TextEqCondition(texts)
     private val dm = DescEqCondition(texts)
 
-    override fun invoke(node: AcsNode): Boolean {
-        return tm(node) || dm(node)
+    override fun match(node: AcsNode): Boolean {
+        return tm.match(node) || dm.match(node)
     }
 
     override fun toString() = "($tm || $dm)"
@@ -233,7 +228,7 @@ fun textOrDesc(vararg texts: String) = TextOrDescEqCondition(texts)
 
 abstract class BoolCondition(internal val b: Boolean) : MatchCondition {
     abstract fun AcsNode.prop(): Boolean?
-    override fun invoke(node: AcsNode) = node.prop() == b
+    override fun match(node: AcsNode) = node.prop() == b
 }
 
 class ClickableCondition(b: Boolean) : BoolCondition(b) {
@@ -260,7 +255,7 @@ fun ConditionGroup.checkable(b: Boolean = true) = link(CheckableCondition(b))
 fun checkable(b: Boolean = true) = CheckableCondition(b)
 
 class CheckedCondition(b: Boolean) : BoolCondition(b) {
-    override fun AcsNode.prop() = isChecked
+    override fun AcsNode.prop() = checked == 1
     override fun toString() = if (b) "Checked" else "NotChecked"
 }
 
@@ -270,36 +265,27 @@ fun ConditionGroup.checked(b: Boolean = true) = link(CheckedCondition(b))
 @JvmOverloads
 fun checked(b: Boolean = true) = CheckedCondition(b)
 
-@Suppress("SpellCheckingInspection")
-@RequiresApi(Build.VERSION_CODES.KITKAT)
 class DismissableCondition(b: Boolean) : BoolCondition(b) {
     override fun AcsNode.prop() = isDismissable
 
     override fun toString() = if (b) "Dismissable" else "NotDismissable"
 }
 
-@Suppress("SpellCheckingInspection")
-@RequiresApi(Build.VERSION_CODES.KITKAT)
 @JvmOverloads
 fun ConditionGroup.dismissable(b: Boolean = true) = link(DismissableCondition(b))
 
-@Suppress("SpellCheckingInspection")
-@RequiresApi(Build.VERSION_CODES.KITKAT)
 @JvmOverloads
 fun dismissable(b: Boolean = true) = DismissableCondition(b)
 
 
-@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 class EditableCondition(b: Boolean) : BoolCondition(b) {
     override fun AcsNode.prop(): Boolean = isEditable
     override fun toString() = if (b) "Editable" else "NotEditable"
 }
 
-@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 @JvmOverloads
 fun ConditionGroup.editable(b: Boolean = true) = link(EditableCondition(b))
 
-@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 @JvmOverloads
 fun editable(b: Boolean = true) = EditableCondition(b)
 
@@ -350,7 +336,7 @@ fun ConditionGroup.focused(b: Boolean = true) = link(FocusedCondition(b))
 fun focused(b: Boolean = true) = FocusedCondition(b)
 
 object HasChildCondition : MatchCondition {
-    override fun invoke(node: AcsNode) = node.childCount > 0
+    override fun match(node: AcsNode) = node.childCount > 0
     override fun toString() = "HasChild"
 }
 
@@ -359,7 +345,7 @@ fun ConditionGroup.hasChild() = link(HasChildCondition)
 fun hasChild() = HasChildCondition
 
 object NoChildCondition : MatchCondition {
-    override fun invoke(node: AcsNode) = node.childCount == 0
+    override fun match(node: AcsNode) = node.childCount == 0
     override fun toString() = "NoChild"
 }
 
@@ -371,7 +357,7 @@ class ClassNameCondition(private val clses: Array<out String>) : MatchCondition 
         requireNotEmpty(clses)
     }
 
-    override fun invoke(node: AcsNode): Boolean {
+    override fun match(node: AcsNode): Boolean {
         val clsName = node.className?.toString() ?: return false
         return clses.any { clsName.contains(it, ignoreCase = true) }
     }
@@ -410,7 +396,7 @@ class DescStartWithsCondition(val text: String) : MatchCondition {
         if (text.isEmpty()) throw IllegalStateException("requireNotEmpty")
     }
 
-    override fun invoke(node: AcsNode) =
+    override fun match(node: AcsNode) =
         node.contentDescription?.toString()?.startsWith(text) ?: false
 
     override fun toString() = "DESC startWiths $text"
@@ -421,7 +407,7 @@ class TextStartWithsCondition(val text: String) : MatchCondition {
         if (text.isEmpty()) throw IllegalStateException("requireNotEmpty")
     }
 
-    override fun invoke(node: AcsNode) =
+    override fun match(node: AcsNode) =
         node.text?.toString()?.startsWith(text) ?: false
 
     override fun toString() = "TEXT startWiths $text"
@@ -431,12 +417,14 @@ fun ConditionGroup.descStartWiths(desc: String) = link(DescStartWithsCondition(d
 fun ConditionGroup.textStartWiths(text: String) = link(TextStartWithsCondition(text))
 
 
-//
-// class CCondition(private val b: Boolean) : MatchCondition {
-//    override fun invoke(node: AcsNode): Boolean {
-//
-//        node.className
-//
-//        return false
-//    }
-//}
+class DisplayIdCondition(val displayId: Int) : MatchCondition {
+    override val canInterrupt = true
+
+    override fun match(node: AcsNode): Boolean {
+        return node.window?.displayId == displayId
+    }
+
+    override fun toString() = "DISPLAY_ID == $displayId"
+}
+
+fun ConditionGroup.displayId(displayId: Int) = link(DisplayIdCondition(displayId))

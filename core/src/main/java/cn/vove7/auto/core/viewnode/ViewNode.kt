@@ -8,6 +8,7 @@ import android.view.ViewConfiguration
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
 import androidx.core.os.bundleOf
+import androidx.core.util.size
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
 import cn.vove7.auto.core.AutoApi
@@ -44,37 +45,47 @@ class ViewNode : ViewOperation {
 
         private const val ROOT_TAG = "ViewNodeRoot"
 
-        fun rootNodesOfAllWindows(): ViewChildList =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                ViewChildList().also { list ->
-                    AutoApi.windows()?.sortedByDescending {
+        fun rootNodes(): ViewChildList {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                rootNodesOfAllDisplays()
+            } else rootNodesOfAllWindows()
+        }
+
+        @RequiresApi(Build.VERSION_CODES.R)
+        fun rootNodesOfAllDisplays(): ViewChildList =
+            ViewChildList().also { list ->
+                AutoApi.windowsOnAllDisplays()
+                    .run { (0 until size).flatMap { valueAt(it) } }
+                    .sortedByDescending {
                         if (it.isActive) Int.MAX_VALUE else it.layer
-                    }?.forEach { win ->
+                    }.forEach { win ->
                         list.add(
                             win.root?.let { r -> ViewNode(r.also(AccessibilityNodeInfo::refresh)) }
                         )
-                    } ?: list.add(activeWinNode())
-                }
-            } else {
-                ViewChildList().also { list ->
-                    list.add(activeWinNode())
-                }
+                    }
+            }
+
+        fun rootNodesOfAllWindows(): ViewChildList =
+            ViewChildList().also { list ->
+                AutoApi.windows()?.sortedByDescending {
+                    if (it.isActive) Int.MAX_VALUE else it.layer
+                }?.map { win ->
+                    win.root?.let { r -> ViewNode(r.also(AccessibilityNodeInfo::refresh)) }
+                }?.also {
+                    list.addAll(it)
+                } ?: list.add(activeWinNode())
             }
 
         /**
          * 第一层为 windows
          */
         fun getRoot(): ViewNode {
-            return withChildren(rootNodesOfAllWindows())
+            return withChildren(rootNodes())
         }
 
         fun activeWinNode(): ViewNode? {
             return AutoApi.rootInActiveWindow()?.let {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                    ViewNode(it.also(AccessibilityNodeInfo::refresh))
-                } else {
-                    ViewNode(it)
-                }
+                ViewNode(it.also(AccessibilityNodeInfo::refresh))
             }
         }
 
@@ -94,11 +105,10 @@ class ViewNode : ViewOperation {
             val root = activeWinNode()
             return root?.findByDepths(*depths)
                 ?: throw ViewNodeNotFoundException(
-                    "can not find view by depths: ${depths.contentToString()}" +
+                    "Can not find view by depths: ${depths.contentToString()}" +
                             ", startNode: root($root)"
                 )
         }
-
     }
 
     override val id: String
@@ -249,12 +259,10 @@ class ViewNode : ViewOperation {
         return node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_DOWN.id)
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun scrollForward(): Boolean {
         return node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD.id)
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun scrollBackward(): Boolean {
         return node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD.id)
     }

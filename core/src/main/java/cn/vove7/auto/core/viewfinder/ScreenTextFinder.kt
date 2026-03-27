@@ -1,6 +1,7 @@
 package cn.vove7.auto.core.viewfinder
 
 import cn.vove7.auto.core.viewnode.ViewNode
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * # ScreenTextFinder
@@ -15,7 +16,7 @@ class ScreenTextFinder(
 
     var isWeb = false
 
-    override fun findCondition(node: AcsNode): Boolean {
+    override fun findCondition(node: AcsNode, interrupt: AtomicBoolean): Boolean {
         if (node.className?.endsWith("WebView", ignoreCase = true) == true) {
             isWeb = true
             return false

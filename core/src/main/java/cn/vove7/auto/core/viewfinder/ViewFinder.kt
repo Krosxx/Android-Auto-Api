@@ -7,6 +7,10 @@ import cn.vove7.auto.core.utils.whileWaitTime
 import cn.vove7.auto.core.viewnode.ViewNode
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import timber.log.Timber
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * 查找符合条件的AccessibilityNodeInfo
@@ -16,13 +20,14 @@ import kotlinx.coroutines.delay
 abstract class ViewFinder<T : ViewFinder<T>>(
     val node: ViewNode? = null
 ) {
+    @Suppress("PropertyName")
+    val DEBUG = FinderConfig.DEBUG_LOG
 
-    val startNode: ViewNode
-        get() = node ?: ViewNode.getRoot()
+    val startNode: ViewNode get() = node ?: ViewNode.getRoot()
 
     // startNode 为 ViewNode.getRoot() 时，SDK_INT >= LOLLIPOP 搜索失败时，
-    // 走 SDK_INT < LOLLIPOP root 节点
-    private var rootCompat: Boolean = false
+    // 尝试走 SDK_INT < LOLLIPOP ViewNode.activeWinNode() 节点
+    private var rootCompat: Boolean = FinderConfig.FINDER_ROOT_COMPAT
         get() = field && this.node == null
 
     private var includeInvisible: Boolean = FinderConfig.FINDER_INCLUDE_INVISIBLE
@@ -37,11 +42,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         waitTime: Long = FinderConfig.FINDER_WAIT_MILLIS,
         interval: Long = FinderConfig.FINDER_WAIT_INTERVAL,
     ): ViewNode? {
-        val wt = when {
-            waitTime in 0..30000 -> waitTime
-            waitTime < 0 -> 0
-            else -> 30000
-        }
+        val wt = min(30000, max(0, waitTime))
         val beginTime = System.currentTimeMillis()
         val endTime = beginTime + wt
         do {
@@ -68,19 +69,21 @@ abstract class ViewFinder<T : ViewFinder<T>>(
      * 查找第一个
      * @return ViewNode?
      */
-    suspend fun findFirst(): ViewNode? {
-        // 不可见
-        return traverseAllNode(startNode, includeInvisible = includeInvisible).let {
+    suspend fun findFirst(): ViewNode? =
+        traverseAllNode(startNode, includeInvisible = includeInvisible).let {
             if (it == null && rootCompat) {
+                Timber.d("findFirst with rootCompat")
                 traverseAllNode(ViewNode.activeWinNode(), includeInvisible = includeInvisible)
             } else it
         }
-    }
 
     @Throws(CancellationException::class)
     fun findFirstBlocking(): ViewNode? {
         return traverseAllNodeBlocking(startNode, includeInvisible = includeInvisible).let {
             if (it == null && rootCompat) {
+                if (DEBUG) {
+                    Timber.d("findFirst with rootCompat")
+                }
                 traverseAllNodeBlocking(
                     ViewNode.activeWinNode(),
                     includeInvisible = includeInvisible
@@ -123,7 +126,22 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         val l = mutableListOf<ViewNode>()
         traverseAllNode(startNode, includeInvisible, l)
         if (l.isEmpty() && rootCompat) {
+            if (DEBUG) {
+                Timber.d("findAll with rootCompat")
+            }
             traverseAllNode(ViewNode.activeWinNode(), includeInvisible, l)
+        }
+        return l
+    }
+
+    fun findAllBlocking(): List<ViewNode> {
+        val l = mutableListOf<ViewNode>()
+        traverseAllNodeBlocking(startNode, l, includeInvisible)
+        if (l.isEmpty() && rootCompat) {
+            if (DEBUG) {
+                Timber.d("findAll with rootCompat")
+            }
+            traverseAllNodeBlocking(ViewNode.activeWinNode(), l, includeInvisible)
         }
         return l
     }
@@ -147,6 +165,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         node ?: return null
         if (node.node in nodeSet) return null
         nodeSet.add(node.node)
+        val interrupt = AtomicBoolean(false)
         node.children.forEach { childNode ->
             ensureActive()
             if (childNode == null) {
@@ -155,14 +174,23 @@ abstract class ViewFinder<T : ViewFinder<T>>(
             if (!includeInvisible && !childNode.isVisibleToUser) {
                 return@forEach
             }
-            if (findCondition(childNode.node)) {
+            interrupt.set(false)
+            val matched = findCondition(childNode.node, interrupt)
+            if (matched) {
                 if (list != null) {
                     list.add(childNode)
                 } else return childNode
             }
-            val r = traverseAllNode(childNode, includeInvisible, list, depth + 1)
-            if (list == null && r != null) {
-                return r
+            if (!matched && interrupt.get()) {
+                // skip children search
+                if (DEBUG) {
+                    Timber.d("skip children search $childNode")
+                }
+            } else {
+                val r = traverseAllNode(childNode, includeInvisible, list, depth + 1)
+                if (list == null && r != null) {
+                    return r
+                }
             }
         }
         return null
@@ -177,6 +205,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         node ?: return null
         if (node.hashCode() in nodeSet) return null
         nodeSet.add(node.hashCode())
+        val interrupt = AtomicBoolean(false)
         node.children.forEach { childNode ->
             ensureNotInterrupt()
             if (childNode == null) {
@@ -185,17 +214,26 @@ abstract class ViewFinder<T : ViewFinder<T>>(
             if (!includeInvisible && !childNode.isVisibleToUser) {
                 return@forEach
             }
-            if (findCondition(childNode.node)) {
+            interrupt.set(false)
+            val matched = findCondition(childNode.node, interrupt)
+            if (matched) {
                 if (list != null) {
                     list.add(childNode)
                 } else return childNode
             }
-            val r = traverseAllNodeBlocking(
-                childNode,
-                list, includeInvisible, depth + 1, nodeSet
-            )
-            if (list == null && r != null) {
-                return r
+            if (!matched && interrupt.get()) {
+                // skip children search
+                if (DEBUG) {
+                    Timber.d("skip children search $childNode")
+                }
+            } else {
+                val r = traverseAllNodeBlocking(
+                    childNode,
+                    list, includeInvisible, depth + 1, nodeSet
+                )
+                if (list == null && r != null) {
+                    return r
+                }
             }
         }
         return null
@@ -225,7 +263,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
     /**
      * 查找条件
      */
-    abstract fun findCondition(node: AcsNode): Boolean
+    abstract fun findCondition(node: AcsNode, interrupt: AtomicBoolean): Boolean
 
     abstract fun finderInfo(): String
 }

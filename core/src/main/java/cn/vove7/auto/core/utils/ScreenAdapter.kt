@@ -15,6 +15,7 @@ import cn.vove7.auto.core.AutoApi
  * @author Vove
  * 2018/9/6
  */
+@Deprecated("todo 动态屏幕尺寸")
 object ScreenAdapter {
     private val deviceHeight: Int
     private val deviceWidth: Int
@@ -29,12 +30,14 @@ object ScreenAdapter {
                 deviceHeight = m.heightPixels
                 deviceWidth = m.widthPixels
             }
+
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 -> {
                 val size = Point(0, 0)
                 display.getRealSize(size)
                 deviceWidth = size.x
                 deviceHeight = size.y
             }
+
             else -> {
                 @Suppress("DEPRECATION")
                 deviceWidth = display.width

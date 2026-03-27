@@ -10,7 +10,6 @@ import android.util.Pair
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
-import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
@@ -63,6 +62,7 @@ import cn.vove7.auto.core.viewfinder.editable
 import cn.vove7.auto.core.viewfinder.id
 import cn.vove7.auto.core.viewfinder.longClickable
 import cn.vove7.auto.core.viewfinder.matchText
+import cn.vove7.auto.core.viewfinder.packageName
 import cn.vove7.auto.core.viewfinder.scrollable
 import cn.vove7.auto.core.viewfinder.similarityText
 import cn.vove7.auto.core.viewfinder.text
@@ -431,7 +431,7 @@ class SmartFinderAction : Action() {
         val s = ViewNode.findByDepths(1, 0, 0)
         sb.appendLine(s?.toString())
 
-        (SF where text("1111") or text("2222")
+        (SF and text("1111") or text("2222")
                 and id("111") or longClickable()).findAll()
 
 
@@ -756,5 +756,20 @@ class InVisibleTest : Action() {
                 .includeInvisible()
                 .findAll().joinToString("\n") { it.toString() }
         Timber.i("ALL $all")
+    }
+}
+
+class InterruptChildrenSeekTest : Action() {
+    override val name = "InterruptChildrenSeekTest"
+
+    override suspend fun run(act: ComponentActivity) {
+        val nodes = SF.packageName(act.packageName).where("StringNotBlank") {
+            !it.text.isNullOrBlank()
+        }.findAll()
+        withContext(Dispatchers.Main) {
+            AlertDialog.Builder(act).setItems(
+                nodes.map { it.toString() }.toTypedArray(), null
+            ).show()
+        }
     }
 }

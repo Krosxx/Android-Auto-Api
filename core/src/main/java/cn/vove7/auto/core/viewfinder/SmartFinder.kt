@@ -1,8 +1,7 @@
 package cn.vove7.auto.core.viewfinder
 
-import android.view.accessibility.AccessibilityNodeInfo
-import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import cn.vove7.auto.core.viewnode.ViewNode
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * # SmartFinder
@@ -17,7 +16,16 @@ fun interface MatchCondition {
         get() = ConditionType.AND
         set(_) {}
 
-    operator fun invoke(node: AcsNode): Boolean
+    val canInterrupt: Boolean get() = false
+
+    // AcsNode 条件匹配
+    // interrupt: 中断子结点查询
+    // 值为 true 时，当 invoke 返回false将中止 children 查询
+    fun match(node: AcsNode, interrupt: AtomicBoolean) = match(node).also {
+        interrupt.set(canInterrupt && !it)
+    }
+
+    fun match(node: AcsNode): Boolean
 }
 
 enum class ConditionType { AND, OR }
@@ -29,9 +37,10 @@ class ConditionNode(
     override fun toString() = condition.toString()
 }
 
-abstract class ConditionGroup(
+open class ConditionGroup(
     node: ViewNode? = null
 ) : ViewFinder<ConditionGroup>(node), MatchCondition, FinderBuilderWithOperation {
+    override fun finderInfo(): String = "ConditionGroup${toString()}"
 
     override var conditionType: ConditionType = ConditionType.AND
     internal val conditions: MutableList<MatchCondition> = mutableListOf()
@@ -48,6 +57,9 @@ abstract class ConditionGroup(
         }
         append(")")
     }
+
+    override fun findCondition(node: AcsNode, interrupt: AtomicBoolean):
+            Boolean = match(node, interrupt)
 
     fun and(vararg conditions: MatchCondition): ConditionGroup {
         if (conditions.isEmpty()) {
@@ -98,7 +110,11 @@ abstract class ConditionGroup(
         return this
     }
 
-    override operator fun invoke(node: AcsNode): Boolean {
+    override fun match(node: AcsNode): Boolean {
+        error("SF Don't want to enter here [match]")
+    }
+
+    override fun match(node: AcsNode, interrupt: AtomicBoolean): Boolean {
         if (conditions.isEmpty()) {
             throw IllegalArgumentException("SmartFinder has no conditions")
         }
@@ -106,7 +122,7 @@ abstract class ConditionGroup(
             throw IllegalStateException("first condition type must be AND")
         }
         conditions.forEachIndexed { i, cond ->
-            if (cond.invoke(node)) {
+            if (cond.match(node, interrupt)) {
                 if (i + 1 < conditions.size && conditions[i + 1].conditionType == ConditionType.OR) {
                     // break true or (..)
                     return true
@@ -122,6 +138,19 @@ abstract class ConditionGroup(
 
     infix fun where(cond: MatchCondition): ConditionGroup = and(cond)
     infix fun where(group: ConditionGroup): ConditionGroup = and(group)
+
+    fun where(tag: String? = null, cond: MatchCondition): ConditionGroup = and(
+        LambdaCondition(cond, tag)
+    )
+
+    fun where(tag: String? = null, group: ConditionGroup): ConditionGroup = and(
+        LambdaCondition(group, tag)
+    )
+}
+
+private class LambdaCondition(cond: MatchCondition, tag: String?) : MatchCondition by cond {
+    private val _tag = tag ?: cond.toString()
+    override fun toString() = _tag
 }
 
 val SF get() = SmartFinder()
@@ -130,10 +159,9 @@ class SmartFinder(
     node: ViewNode? = null
 ) : ConditionGroup(node) {
     operator fun invoke(vararg conditions: MatchCondition) = link(*conditions)
-    override fun findCondition(node: AcsNode) = invoke(node)
 
     override fun finderInfo(): String {
         return "SmartFinder startNode: ${node?.toString() ?: "root"} " +
-            "Conditions:${super.toString()}"
+                "Conditions: ${super.toString()}"
     }
 }
