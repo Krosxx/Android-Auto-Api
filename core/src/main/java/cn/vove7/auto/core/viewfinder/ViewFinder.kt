@@ -20,6 +20,7 @@ import kotlin.math.min
 abstract class ViewFinder<T : ViewFinder<T>>(
     val node: ViewNode? = null
 ) {
+    private val Log get() = Timber.tag("ViewFinder")
     @Suppress("PropertyName")
     val DEBUG = FinderConfig.DEBUG_LOG
 
@@ -82,7 +83,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         return traverseAllNodeBlocking(startNode, includeInvisible = includeInvisible).let {
             if (it == null && rootCompat) {
                 if (DEBUG) {
-                    Timber.d("findFirst with rootCompat")
+                    Log.d("findFirst with rootCompat")
                 }
                 traverseAllNodeBlocking(
                     ViewNode.activeWinNode(),
@@ -127,7 +128,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         traverseAllNode(startNode, includeInvisible, l)
         if (l.isEmpty() && rootCompat) {
             if (DEBUG) {
-                Timber.d("findAll with rootCompat")
+                Log.d("findAll with rootCompat")
             }
             traverseAllNode(ViewNode.activeWinNode(), includeInvisible, l)
         }
@@ -139,7 +140,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
         traverseAllNodeBlocking(startNode, l, includeInvisible)
         if (l.isEmpty() && rootCompat) {
             if (DEBUG) {
-                Timber.d("findAll with rootCompat")
+                Log.d("findAll with rootCompat")
             }
             traverseAllNodeBlocking(ViewNode.activeWinNode(), l, includeInvisible)
         }
@@ -184,7 +185,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
             if (!matched && interrupt.get()) {
                 // skip children search
                 if (DEBUG) {
-                    Timber.d("skip children search $childNode")
+                    Log.d("skip children search $childNode")
                 }
             } else {
                 val r = traverseAllNode(childNode, includeInvisible, list, depth + 1)
@@ -224,7 +225,7 @@ abstract class ViewFinder<T : ViewFinder<T>>(
             if (!matched && interrupt.get()) {
                 // skip children search
                 if (DEBUG) {
-                    Timber.d("skip children search $childNode")
+                    Log.d("skip children search $childNode")
                 }
             } else {
                 val r = traverseAllNodeBlocking(

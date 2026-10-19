@@ -46,35 +46,21 @@ class ViewNode : ViewOperation {
         private const val ROOT_TAG = "ViewNodeRoot"
 
         fun rootNodes(): ViewChildList {
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                rootNodesOfAllDisplays()
-            } else rootNodesOfAllWindows()
-        }
-
-        @RequiresApi(Build.VERSION_CODES.R)
-        fun rootNodesOfAllDisplays(): ViewChildList =
-            ViewChildList().also { list ->
-                AutoApi.windowsOnAllDisplays()
-                    .run { (0 until size).flatMap { valueAt(it) } }
-                    .sortedByDescending {
-                        if (it.isActive) Int.MAX_VALUE else it.layer
-                    }.forEach { win ->
-                        list.add(
-                            win.root?.let { r -> ViewNode(r.also(AccessibilityNodeInfo::refresh)) }
-                        )
-                    }
-            }
-
-        fun rootNodesOfAllWindows(): ViewChildList =
-            ViewChildList().also { list ->
-                AutoApi.windows()?.sortedByDescending {
+            val windows = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                AutoApi.windowsOnAllDisplays().run {
+                    (0 until size).flatMap { valueAt(it) }
+                }
+            } else AutoApi.windows() ?: emptyList()
+            return ViewChildList().also { list ->
+                windows.sortedByDescending {
                     if (it.isActive) Int.MAX_VALUE else it.layer
-                }?.map { win ->
-                    win.root?.let { r -> ViewNode(r.also(AccessibilityNodeInfo::refresh)) }
-                }?.also {
-                    list.addAll(it)
-                } ?: list.add(activeWinNode())
+                }.forEach { win ->
+                    list.add(
+                        win.root?.let { r -> ViewNode(r.also(AccessibilityNodeInfo::refresh)) }
+                    )
+                }
             }
+        }
 
         /**
          * 第一层为 windows
@@ -449,7 +435,7 @@ class ViewNode : ViewOperation {
     override fun refresh(): Boolean {
         childrenCache = null
         if (buildWithChildren) {
-            childrenCache = rootNodesOfAllWindows()
+            childrenCache = rootNodes()
             return true
         }
         return node.refresh()

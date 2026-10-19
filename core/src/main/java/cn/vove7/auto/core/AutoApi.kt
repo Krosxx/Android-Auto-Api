@@ -15,8 +15,9 @@ import androidx.annotation.RequiresApi
 import cn.vove7.auto.core.utils.AutoGestureDescription
 import cn.vove7.auto.core.utils.AutoServiceUnavailableException
 import cn.vove7.auto.core.utils.GestureResultCallback
-import cn.vove7.auto.core.utils.ensureNotInMainThread
 import cn.vove7.auto.core.utils.getApplication
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Proxy
 import java.util.concurrent.TimeoutException
@@ -146,9 +147,8 @@ interface AutoApi {
     // 返回执行是否成功
     suspend fun doGestureSync(
         gesture: AutoGestureDescription
-    ): Boolean {
-        ensureNotInMainThread("doGestureSync")
-        return suspendCoroutine { cont ->
+    ): Boolean = withContext(Dispatchers.Default){
+        suspendCoroutine { cont ->
             doGestureAsync(gesture, object : GestureResultCallback() {
                 override fun onCompleted(gestureDescription: AutoGestureDescription?) {
                     cont.resume(true)

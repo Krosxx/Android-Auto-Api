@@ -10,7 +10,8 @@ import cn.vove7.auto.core.utils.AutoGestureDescription
 import cn.vove7.auto.core.utils.GestureCanceledException
 import cn.vove7.auto.core.utils.GestureResultCallback
 import cn.vove7.auto.core.utils.ScreenAdapter
-import cn.vove7.auto.core.utils.ensureNotInMainThread
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
@@ -130,11 +131,10 @@ fun gesturesAsync(
 @Throws(GestureCanceledException::class)
 suspend fun playGestures(
     strokeList: List<AutoGestureDescription.StrokeDescription>
-): Boolean {
+): Boolean = withContext(Dispatchers.Default) {
     val builder = AutoGestureDescription.Builder()
     strokeList.forEach(builder::addStroke)
-    ensureNotInMainThread("playGestures")
-    return AutoApi.doGestureSync(builder.build())
+    AutoApi.doGestureSync(builder.build())
 }
 
 /**

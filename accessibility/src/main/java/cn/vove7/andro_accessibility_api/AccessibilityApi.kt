@@ -23,10 +23,11 @@ import cn.vove7.auto.core.PageUpdateMonitor
 import cn.vove7.auto.core.utils.AutoGestureDescription
 import cn.vove7.auto.core.utils.NeedAccessibilityException
 import cn.vove7.auto.core.utils.convert
-import cn.vove7.auto.core.utils.ensureNotInMainThread
 import cn.vove7.auto.core.utils.jumpAccessibilityServiceSettings
 import cn.vove7.auto.core.utils.whileWaitTime
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.TimeoutException
 import kotlin.coroutines.resume
@@ -77,6 +78,7 @@ abstract class AccessibilityApi : AccessibilityService(), AutoApi {
         }
     }
 
+    @SuppressLint("LogNotTimber")
     override fun getRootInActiveWindow(): AccessibilityNodeInfo? {
         return try {
             super.getRootInActiveWindow()
@@ -101,39 +103,39 @@ abstract class AccessibilityApi : AccessibilityService(), AutoApi {
         PageUpdateMonitor.onAccessibilityEvent(event)
     }
 
-    override suspend fun takeScreenshot(displayId: Int): Bitmap? {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            ensureNotInMainThread("takeScreenshot")
-            return withTimeoutOrNull(5000) {
-                suspendCancellableCoroutine { cont ->
-                    try {
-                        super.takeScreenshot(
-                            displayId, appCtx.mainExecutor,
-                            object : TakeScreenshotCallback {
-                                override fun onSuccess(screenshot: ScreenshotResult) {
-                                    val bitmap = Bitmap.wrapHardwareBuffer(
-                                        screenshot.hardwareBuffer,
-                                        screenshot.colorSpace
-                                    )
-                                    if (bitmap != null) cont.resume(bitmap)
-                                    else cont.resumeWithException(
-                                        RuntimeException("takeScreenshot failed, npe.")
-                                    )
-                                }
-
-                                override fun onFailure(errorCode: Int) {
-                                    cont.resumeWithException(RuntimeException("takeScreenshot failed, code: $errorCode"))
-                                }
-                            })
-                    } catch (e: Throwable) {
-                        cont.resumeWithException(RuntimeException("takeScreenshot failed", e))
-                    }
-                }
-            } ?: throw TimeoutException("takeScreenshot timeout.")
-        } else {
+    @SuppressLint("LogNotTimber")
+    override suspend fun takeScreenshot(
+        displayId: Int
+    ): Bitmap? = withContext(Dispatchers.Default) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
             Log.w("AccessibilityApi", "takeScreenshot need Android 11+")
-        }
-        return null
+            return@withContext null
+        } else withTimeoutOrNull(5000) {
+            suspendCancellableCoroutine { cont ->
+                try {
+                    super.takeScreenshot(
+                        displayId, appCtx.mainExecutor,
+                        object : TakeScreenshotCallback {
+                            override fun onSuccess(screenshot: ScreenshotResult) {
+                                val bitmap = Bitmap.wrapHardwareBuffer(
+                                    screenshot.hardwareBuffer,
+                                    screenshot.colorSpace
+                                )
+                                if (bitmap != null) cont.resume(bitmap)
+                                else cont.resumeWithException(
+                                    RuntimeException("takeScreenshot failed, npe.")
+                                )
+                            }
+
+                            override fun onFailure(errorCode: Int) {
+                                cont.resumeWithException(RuntimeException("takeScreenshot failed, code: $errorCode"))
+                            }
+                        })
+                } catch (e: Throwable) {
+                    cont.resumeWithException(RuntimeException("takeScreenshot failed", e))
+                }
+            }
+        } ?: throw TimeoutException("takeScreenshot timeout.")
     }
 
     override fun onInterrupt() {
